@@ -530,5 +530,3 @@ const chip =
   "inline-block px-2 py-[2px] rounded-full whitespace-nowrap font-semibold";
 const badge =
   "inline-block px-2 py-[2px] rounded-full whitespace-nowrap font-medium";
-
-export { chip, badge };

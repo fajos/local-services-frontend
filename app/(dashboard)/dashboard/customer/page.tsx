@@ -354,14 +354,14 @@ function badgeColor(status?: string) {
 }
 
 /* ---------- tailwind shortcuts ---------- */
-export const badge =
+const badge =
   "inline-block px-2 py-[2px] rounded-full whitespace-nowrap font-medium";
 
 const btnBase =
   "inline-flex items-center gap-1 px-3 py-[2px] text-[11px] font-semibold rounded-full transition active:scale-95";
 
 /* as‑const → keeps literal types, nice autocompletion */
-export const btn = {
+const btn = {
   emerald: `${btnBase} bg-emerald-600 hover:bg-emerald-700 text-white`,
   fuchsia: `${btnBase} bg-fuchsia-600 hover:bg-fuchsia-700 text-white`,
   violet: `${btnBase} bg-violet-600 hover:bg-violet-700 text-white`,

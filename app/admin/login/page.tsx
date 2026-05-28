@@ -43,7 +43,11 @@ export default function AdminLoginPage() {
         is_provider: payload.is_provider,
         is_admin: payload.is_admin,
         is_super_admin: payload.is_super_admin,
-        is_verified_provider: payload.is_verified_provider
+        is_verified_provider: payload.is_verified_provider,
+        provider_id: payload.provider_id || "",
+        is_email_confirmed: payload.is_email_confirmed || false,
+        is_phone_confirmed: payload.is_phone_confirmed || false,
+        is_identity_verified: payload.is_identity_verified || false,
       });
 
       toast.success("✅ Admin login successful!");
