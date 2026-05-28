@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import axios from "axios";
+import API from "@/lib/api";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { useAuth } from "@/context/AuthContext";
 import { CATEGORIES } from "@/utils/categories";
@@ -36,10 +36,7 @@ export default function AddServicePage() {
   useEffect(() => {
     if (!token || !user?.is_provider) return;
 
-    axios
-      .get("http://localhost:8000/providers/me", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+    API.get("/providers/me")
       .then((res) => setProviderId(res.data.id))
       .catch(() => router.push("/"));
   }, [token, user, router]);
@@ -70,9 +67,7 @@ export default function AddServicePage() {
         provider_id: providerId,
       };
 
-      await axios.post("http://localhost:8000/services/", payload, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await API.post("/services/", payload);
 
       toast.success("✅ Service published successfully!");
       setTimeout(() => router.push("/dashboard/provider"), 1500);

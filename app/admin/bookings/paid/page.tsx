@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import axios from "axios";
+import API from "@/lib/api";
 import { toast } from "react-hot-toast";
 
 interface Booking {
@@ -23,9 +23,8 @@ export default function PendingPayoutsPage() {
   useEffect(() => {
     if (!token) return;
 
-    axios.get("http://localhost:8000/admin/bookings/paid", {
-      headers: { Authorization: `Bearer ${token}` }
-    }).then(res => setBookings(res.data))
+    API.get("/admin/bookings/paid")
+      .then(res => setBookings(res.data))
       .catch(err => {
         console.error("Error fetching paid bookings", err);
         toast.error("❌ Failed to fetch pending payouts.");
@@ -37,9 +36,7 @@ export default function PendingPayoutsPage() {
     if (!confirm("Are you sure you want to release this payment to the provider?")) return;
 
     try {
-      await axios.post(`http://localhost:8000/admin/bookings/${bookingId}/release`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await API.post(`/admin/bookings/${bookingId}/release`, {});
       setBookings(prev => prev.filter(b => b.id !== bookingId));
       toast.success("✅ Payout initiated successfully!");
     } catch (err) {

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import axios from "axios";
+import API from "@/lib/api";
 import VerifiedBadge from "@/components/VerifiedBadge";
 
 interface ServiceCard {
@@ -26,8 +26,8 @@ export default function CategoryPage({
   const cat = decodeURIComponent(params.category);
 
   useEffect(() => {
-    axios
-      .get(`http://localhost:8000/services/category/${cat}`)
+    API
+      .get(`/services/category/${cat}`)
       .then((res) => setServices(res.data))
       .catch(() => setServices([]))
       .finally(() => setLoading(false));

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import axios from "axios";
+import API from "@/lib/api";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -27,9 +27,8 @@ export default function AdminDashboardHome() {
       return;
     }
 
-    axios.get("http://localhost:8000/admin/summary", {
-      headers: { Authorization: `Bearer ${token}` }
-    }).then((res) => setSummary(res.data))
+    API.get("/admin/summary")
+      .then((res) => setSummary(res.data))
       .catch((err) => {
         console.error("Error fetching summary:", err);
         alert("Access denied or failed to fetch summary.");

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import axios from "axios";
+import API from "@/lib/api";
 import { toast } from "react-hot-toast";
 import { useAuth } from "@/context/AuthContext";
 
@@ -21,7 +21,7 @@ function ConfirmEmailContent() {
     }
 
     if (token) {
-      axios.post("http://localhost:8000/auth/confirm-email", { token })
+      API.post("/auth/confirm-email", { token })
         .then(() => {
           setStatus("success");
           toast.success("Email confirmed! You can now log in.");

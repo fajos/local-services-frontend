@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import axios from "axios";
+import API from "@/lib/api";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -48,11 +48,7 @@ export default function CustomerDashboard() {
   /* helpers -------------------------------------------------------- */
   const handleCancel = async (id: string) => {
     try {
-      await axios.patch(
-        `http://localhost:8000/bookings/${id}/cancel`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await API.patch(`/bookings/${id}/cancel`);
       setBookings((prev) => prev.filter((b) => b.id !== id));
     } catch {
       alert("Failed to cancel booking.");
@@ -61,11 +57,7 @@ export default function CustomerDashboard() {
 
   const handleAcceptQuote = async (id: string) => {
     try {
-      await axios.post(
-        `http://localhost:8000/bookings/${id}/accept-quote`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await API.post(`/bookings/${id}/accept-quote`);
       setBookings((prev) =>
         prev.map((b) =>
           b.id === id ? { ...b, quote_status: "accepted" } : b
@@ -79,11 +71,7 @@ export default function CustomerDashboard() {
 
   const handleDeclineQuote = async (id: string) => {
     try {
-      await axios.patch(
-        `http://localhost:8000/bookings/${id}/decline-quote`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await API.patch(`/bookings/${id}/decline-quote`);
       setBookings((prev) =>
         prev.map((b) =>
           b.id === id ? { ...b, quote_status: "declined" } : b
@@ -97,11 +85,7 @@ export default function CustomerDashboard() {
   const handlePayNow = async (id: string) => {
     if (!confirm("Proceed to pay for this booking?")) return;
     try {
-      await axios.post(
-        `http://localhost:8000/bookings/${id}/mark-paid`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await API.post(`/bookings/${id}/mark-paid`);
       setBookings((prev) =>
         prev.map((b) => (b.id === id ? { ...b, payment_status: "paid" } : b))
       );
@@ -114,10 +98,7 @@ export default function CustomerDashboard() {
   /* fetch once ----------------------------------------------------- */
   useEffect(() => {
     if (!token) return;
-    axios
-      .get("http://localhost:8000/bookings/me", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+    API.get("/bookings/me")
       .then((res) => setBookings(res.data))
       .catch(() => setBookings([]));
   }, [token]);
@@ -300,15 +281,11 @@ export default function CustomerDashboard() {
                 <button
                   onClick={async () => {
                     try {
-                      await axios.post(
-                        "http://localhost:8000/reviews/",
-                        {
-                          booking_id: draft.bookingId,
-                          rating: draft.rating,
-                          comment: draft.comment || null,
-                        },
-                        { headers: { Authorization: `Bearer ${token}` } }
-                      );
+                      await API.post("/reviews/", {
+                        booking_id: draft.bookingId,
+                        rating: draft.rating,
+                        comment: draft.comment || null,
+                      });
                       setBookings((prev) =>
                         prev.map((b) =>
                           b.id === draft.bookingId ? { ...b, reviewed: true } : b

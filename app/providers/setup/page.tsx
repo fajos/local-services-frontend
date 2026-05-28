@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import axios from "axios";
+import API from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import toast from "react-hot-toast";
@@ -34,11 +34,7 @@ export default function ProviderSetupPage() {
     setSuccess("");
 
     try {
-      await axios.post("http://localhost:8000/providers/setup", form, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      await API.post("/providers/setup", form);
       toast.success("✅ Provider profile created! Awaiting admin approval.");
       setSuccess("✅ Provider profile created!");
       setTimeout(() => router.push("/provider/pending"), 1500);

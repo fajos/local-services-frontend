@@ -2,7 +2,7 @@
 
 import { useState, FormEvent } from "react";
 import toast from "react-hot-toast";
-import axios from "axios";
+import API from "@/lib/api";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -43,8 +43,8 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      const res = await axios.post<RegisterResponse>(
-        "http://localhost:8000/auth/register",
+      const res = await API.post<RegisterResponse>(
+        "/auth/register",
         {
           ...form,
           email: form.email || undefined,

@@ -19,6 +19,13 @@ interface User {
   is_email_confirmed: boolean;
   is_phone_confirmed: boolean;
   is_identity_verified: boolean;
+  identity_status?: string;
+  id_type?: string;
+  id_number?: string;
+  id_photo_url?: string;
+  phone?: string;
+  address?: string;
+  created_at?: string;
 }
 
 type ViewMode = "customer" | "provider";

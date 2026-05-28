@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from "react";
 import ProtectedRoute from "@/components/ProtectedRoute";
-import axios from "axios";
+import API from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
@@ -84,9 +84,7 @@ export default function DashboardPage() {
   const deleteService = async (id: string) => {
     if (!confirm("Delete this service? This can’t be undone.")) return;
     try {
-      await axios.delete(`http://localhost:8000/services/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await API.delete(`/services/${id}`);
       setServices((prev) => prev.filter((s) => s.id !== id));
       setFlash("Service deleted.");
     } catch {
@@ -111,20 +109,16 @@ const openEditModal = (svc: Service) => {
 const saveEdits = async () => {
   if (!editing) return;
   try {
-    await axios.patch(
-      `http://localhost:8000/services/${editing.id}`,
-      {
-        name: editForm.name,
-        category: editForm.category,
-        description: editForm.description,
-        price_type: editForm.price_type,
-        price:
-          editForm.price_type === "Fixed" && editForm.price
-            ? Number(editForm.price)
-            : null,
-      },
-      { headers: { Authorization: `Bearer ${token}` } },
-    );
+    await API.patch(`/services/${editing.id}`, {
+      name: editForm.name,
+      category: editForm.category,
+      description: editForm.description,
+      price_type: editForm.price_type,
+      price:
+        editForm.price_type === "Fixed" && editForm.price
+          ? Number(editForm.price)
+          : null,
+    });
     // refresh list locally
     setServices((prev) =>
       prev.map((s) =>
@@ -160,11 +154,7 @@ useEffect(() => {
   /* CRUD helpers (unchanged) ---------------------------------------- */
   const handleAccept = async (id: string) => {
     try {
-      await axios.post(
-        `http://localhost:8000/bookings/${id}/accept-booking`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await API.post(`/bookings/${id}/accept-booking`);
       setBookings((prev) =>
         prev.map((b) => (b.id === id ? { ...b, booking_status: "accepted" } : b))
       );
@@ -175,11 +165,7 @@ useEffect(() => {
 
   const handleComplete = async (id: string) => {
     try {
-      await axios.post(
-        `http://localhost:8000/bookings/${id}/mark-complete`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await API.post(`/bookings/${id}/mark-complete`);
       setBookings((prev) =>
         prev.map((b) =>
           b.id === id ? { ...b, booking_status: "completed" } : b
@@ -192,11 +178,7 @@ useEffect(() => {
 
   const handleDecline = async (id: string) => {
     try {
-      await axios.post(
-        `http://localhost:8000/bookings/${id}/decline-booking`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await API.post(`/bookings/${id}/decline-booking`);
       setBookings((prev) =>
         prev.map((b) => (b.id === id ? { ...b, booking_status: "declined" } : b))
       );
@@ -220,14 +202,9 @@ useEffect(() => {
     const amount = prompt("Enter quote amount (₦):");
     if (!amount) return;
     try {
-      await axios.post(
-        `http://localhost:8000/bookings/${id}/send-quote`,
-        {},
-        {
-          params: { quote_price: parseInt(amount, 10) },
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      await API.post(`/bookings/${id}/send-quote`, {}, {
+        params: { quote_price: parseInt(amount, 10) },
+      });
       setBookings((prev) =>
         prev.map((b) =>
           b.id === id
@@ -244,22 +221,13 @@ useEffect(() => {
   useEffect(() => {
     if (!token || !user?.is_provider || !user?.is_verified_provider) return;
 
-    axios
-      .get("http://localhost:8000/providers/me", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+    API.get("/providers/me")
       .catch(() => router.push("/"));
 
-    axios
-      .get("http://localhost:8000/services/me", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+    API.get("/services/me")
       .then((res) => setServices(res.data));
 
-    axios
-      .get("http://localhost:8000/bookings/provider/me", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+    API.get("/bookings/provider/me")
       .then((res) => setBookings(res.data));
   }, [token, user]);
 

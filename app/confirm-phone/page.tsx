@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, FormEvent } from "react";
-import axios from "axios";
+import API from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 
@@ -21,7 +21,7 @@ export default function ConfirmPhonePage() {
 
     setLoading(true);
     try {
-      await axios.post("http://localhost:8000/auth/confirm-phone", {
+      await API.post("/auth/confirm-phone", {
         user_id: userId,
         code,
       });

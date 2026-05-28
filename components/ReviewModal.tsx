@@ -1,7 +1,7 @@
 // components/ReviewModal.tsx
 "use client";
 import { useState } from "react";
-import axios from "axios";
+import API from "@/lib/api";
 import toast from "react-hot-toast";
 
 export default function ReviewModal({ bookingId, onClose }: { bookingId: string; onClose: () => void }) {
@@ -10,7 +10,7 @@ export default function ReviewModal({ bookingId, onClose }: { bookingId: string;
 
   async function submit() {
     try {
-      await axios.post("/api/reviews", { booking_id: bookingId, rating, comment });
+      await API.post("/reviews", { booking_id: bookingId, rating, comment });
       toast.success("Thanks for reviewing!");
       onClose();
     } catch {

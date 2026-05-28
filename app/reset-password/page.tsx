@@ -2,7 +2,7 @@
 
 import { useState, useEffect, FormEvent } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import axios from "axios";
+import API from "@/lib/api";
 import Link from "next/link";
 
 export default function ResetPasswordPage() {
@@ -17,7 +17,7 @@ export default function ResetPasswordPage() {
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      await axios.post("http://localhost:8000/auth/reset-password", { token, new_password: pw });
+      await API.post("/auth/reset-password", { token, new_password: pw });
       setSent(true);
       setTimeout(() => router.push("/login"), 1500);
     } catch {

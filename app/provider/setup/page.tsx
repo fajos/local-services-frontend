@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import axios from "axios";
+import API from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import toast from "react-hot-toast";
@@ -47,11 +47,7 @@ export default function ProviderSetupPage() {
     setLoading(true);
 
     try {
-      await axios.post("http://localhost:8000/providers/setup", form, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      await API.post("/providers/setup", form);
 
       await refreshUser();
       toast.success("✅ Application submitted! Review in progress.");

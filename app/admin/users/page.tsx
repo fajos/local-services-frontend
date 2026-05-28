@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import axios from "axios";
+import API from "@/lib/api";
 import toast from "react-hot-toast";
 
 interface User {
@@ -37,9 +37,7 @@ export default function AdminUsersPage() {
 
   const makeAdmin = async (userId: string) => {
     try {
-      await axios.patch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/admin/users/${userId}/make-admin`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await API.patch(`/admin/users/${userId}/make-admin`, {});
       setUsers(prev => prev.map(u => u.id === userId ? { ...u, is_admin: true } : u));
       toast.success("✅ User promoted to admin!");
     } catch (err) {
@@ -50,9 +48,7 @@ export default function AdminUsersPage() {
 
   const removeAdmin = async (userId: string) => {
     try {
-      await axios.patch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/admin/users/${userId}/remove-admin`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await API.patch(`/admin/users/${userId}/remove-admin`, {});
       setUsers(prev => prev.map(u => u.id === userId ? { ...u, is_admin: false } : u));
       toast.success("✅ Admin rights removed.");
     } catch (err) {
@@ -67,9 +63,7 @@ export default function AdminUsersPage() {
     setIsSuperAdmin(payload?.is_super_admin === true);
     setCurrentUserId(payload?.sub || null);
 
-    axios.get(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/admin/users`, {
-      headers: { Authorization: `Bearer ${token}` }
-    })
+    API.get("/admin/users")
       .then(res => setUsers(res.data))
       .catch(err => toast.error("Error fetching users"))
       .finally(() => setLoading(false));
@@ -78,9 +72,7 @@ export default function AdminUsersPage() {
   const deactivateUser = async (userId: string) => {
     if (!confirm("Are you sure you want to deactivate this user?")) return;
     try {
-      await axios.patch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/admin/users/${userId}/deactivate`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await API.patch(`/admin/users/${userId}/deactivate`, {});
       setUsers(prev => prev.map(user => user.id === userId ? { ...user, is_active: false } : user));
       toast.success("✅ User deactivated!");
     } catch (err) {
@@ -91,9 +83,7 @@ export default function AdminUsersPage() {
 
   const activateUser = async (userId: string) => {
     try {
-      await axios.patch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/admin/users/${userId}/activate`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await API.patch(`/admin/users/${userId}/activate`, {});
       setUsers(prev => prev.map(user => user.id === userId ? { ...user, is_active: true } : user));
       toast.success("✅ User reactivated!");
     } catch (err) {
@@ -106,10 +96,9 @@ export default function AdminUsersPage() {
   const handlePasswordReset = async () => {
     if (!resetUser) return;
     try {
-      await axios.patch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/admin/users/${resetUser.id}/reset-password`,
-        { new_password: resetPw },
-        { headers: { Authorization: `Bearer ${token}` } }
+      await API.patch(
+        `/admin/users/${resetUser.id}/reset-password`,
+        { new_password: resetPw }
       );
       toast.success(`Password reset for ${resetUser.email}`);
       setResetUser(null);
@@ -123,9 +112,7 @@ export default function AdminUsersPage() {
 
   const verifyIdentity = async (userId: string) => {
     try {
-      await axios.patch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/admin/users/${userId}/verify-identity`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await API.patch(`/admin/users/${userId}/verify-identity`, {});
       setUsers(prev => prev.map(u => u.id === userId ? { ...u, is_identity_verified: true, identity_status: "verified" } : u));
       toast.success("✅ Identity verified!");
     } catch (err) {
@@ -135,9 +122,7 @@ export default function AdminUsersPage() {
 
   const rejectIdentity = async (userId: string) => {
     try {
-      await axios.patch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/admin/users/${userId}/reject-identity`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await API.patch(`/admin/users/${userId}/reject-identity`, {});
       setUsers(prev => prev.map(u => u.id === userId ? { ...u, is_identity_verified: false, identity_status: "rejected" } : u));
       toast.success("🚫 Identity rejected.");
     } catch (err) {

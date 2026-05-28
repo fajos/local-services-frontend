@@ -13,7 +13,9 @@ import {
   CheckIcon,
   XMarkIcon,
   TrashIcon,
-  ShieldCheckIcon
+  ShieldCheckIcon,
+  PhotoIcon,
+  ArrowUpTrayIcon
 } from "@heroicons/react/24/outline";
 
 export default function ProfilePage() {
@@ -35,6 +37,35 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [editMode, setEditMode] = useState(false);
+  const [uploading, setUploading] = useState(false);
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "ml_default");
+
+    try {
+      const res = await fetch(
+        `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
+        { method: "POST", body: formData }
+      );
+      const data = await res.json();
+      if (data.secure_url) {
+        setForm(prev => ({ ...prev, id_photo_url: data.secure_url }));
+        toast.success("ID Document uploaded!");
+      } else {
+        throw new Error("Upload failed");
+      }
+    } catch (err) {
+      toast.error("Upload failed. Please check your configuration.");
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const loadData = async () => {
     if (!token) return;
@@ -144,7 +175,7 @@ export default function ProfilePage() {
               {form.first_name?.[0]}{form.last_name?.[0]}
             </div>
             <div className="text-center md:text-left flex-1">
-              <div className="flex items-center justify-center md:justify-start gap-2">
+                <div className="flex items-center justify-center md:justify-start gap-2">
                 <h1 className="text-3xl font-black text-gray-900">{form.first_name} {form.last_name}</h1>
                 {user?.is_identity_verified && <VerifiedBadge className="w-6 h-6 text-blue-500" />}
               </div>
@@ -222,7 +253,17 @@ export default function ProfilePage() {
 
               {/* Identity Section */}
               <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
-                <h2 className="text-lg font-black text-gray-900 mb-6">Identity Verification</h2>
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-lg font-black text-gray-900">Identity Verification</h2>
+                  <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                    user?.identity_status === 'verified' ? 'bg-green-100 text-green-700' :
+                    user?.identity_status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                    user?.identity_status === 'rejected' ? 'bg-red-100 text-red-700' :
+                    'bg-gray-100 text-gray-600'
+                  }`}>
+                    {user?.identity_status || 'unverified'}
+                  </span>
+                </div>
                 <div className="space-y-4">
                   <div>
                     <label htmlFor="id_type" className="block text-xs font-bold text-gray-400 uppercase mb-1">ID Type</label>
@@ -231,7 +272,7 @@ export default function ProfilePage() {
                       name="id_type"
                       value={form.id_type}
                       onChange={handleChange}
-                      disabled={!editMode || (user as any)?.identity_status === "verified"}
+                      disabled={!editMode || user?.identity_status === "verified"}
                       className="w-full px-4 py-3 rounded-xl border bg-gray-50 disabled:text-gray-500"
                     >
                       <option value="">Select ID Type</option>
@@ -249,9 +290,57 @@ export default function ProfilePage() {
                       name="id_number"
                       value={form.id_number}
                       onChange={handleChange}
-                      disabled={!editMode}
+                      disabled={!editMode || user?.identity_status === "verified"}
                       className="w-full px-4 py-3 rounded-xl border bg-gray-50 disabled:text-gray-500"
                     />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-400 uppercase mb-1">ID Photo Document</label>
+                    <div className="mt-2 flex items-center gap-4">
+                      {form.id_photo_url ? (
+                        <div className="relative w-32 h-20 rounded-xl overflow-hidden border bg-gray-50">
+                          <img
+                            src={form.id_photo_url}
+                            alt="Identity Document"
+                            className="w-full h-full object-cover"
+                          />
+                          {editMode && user?.identity_status !== "verified" && (
+                            <button
+                              onClick={() => setForm({ ...form, id_photo_url: "" })}
+                              className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full shadow-lg hover:bg-red-600 transition"
+                            >
+                              <XMarkIcon className="w-3 h-3" />
+                            </button>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="w-32 h-20 rounded-xl bg-gray-50 border-2 border-dashed border-gray-200 flex flex-col items-center justify-center text-gray-400">
+                          <PhotoIcon className="w-6 h-6 mb-1" />
+                          <span className="text-[10px] font-bold">NO DOCUMENT</span>
+                        </div>
+                      )}
+
+                      {editMode && user?.identity_status !== "verified" && (
+                        <label className="flex-1 flex flex-col items-center justify-center px-4 py-4 border-2 border-dashed border-gray-200 rounded-2xl cursor-pointer hover:bg-gray-50 transition group">
+                          <div className="flex flex-col items-center justify-center">
+                            <ArrowUpTrayIcon className={`w-5 h-5 mb-1 ${uploading ? 'animate-bounce text-cyan-600' : 'text-gray-400 group-hover:text-cyan-600'}`} />
+                            <p className="text-[10px] font-bold text-gray-500 group-hover:text-cyan-600">
+                              {uploading ? "UPLOADING..." : "UPLOAD ID"}
+                            </p>
+                          </div>
+                          <input
+                            type="file"
+                            className="hidden"
+                            onChange={handleUpload}
+                            disabled={uploading}
+                            accept="image/*"
+                          />
+                        </label>
+                      )}
+                    </div>
+                    <p className="mt-2 text-[10px] text-gray-400 leading-relaxed font-medium">
+                      Upload a clear photo of your government-issued ID. Max size 5MB.
+                    </p>
                   </div>
                 </div>
               </div>

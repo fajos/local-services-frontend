@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import axios from "axios";
+import API from "@/lib/api";
 import { toast } from "react-hot-toast";
 
 interface Provider {
@@ -23,9 +23,8 @@ export default function AdminProvidersPage() {
   useEffect(() => {
     if (!token) return;
 
-    axios.get("http://localhost:8000/admin/providers", {
-      headers: { Authorization: `Bearer ${token}` }
-    }).then(res => setProviders(res.data))
+    API.get("/admin/providers")
+      .then(res => setProviders(res.data))
       .catch(err => {
         console.error("Error fetching providers", err);
         toast.error("❌ Failed to fetch providers.");
@@ -35,9 +34,7 @@ export default function AdminProvidersPage() {
 
   const verifyProvider = async (providerId: string) => {
     try {
-      await axios.post(`http://localhost:8000/admin/providers/${providerId}/verify`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await API.post(`/admin/providers/${providerId}/verify`, {});
       setProviders(prev => prev.map(p => p.id === providerId ? { ...p, verified: true } : p));
       toast.success("✅ Provider verified!");
     } catch (err) {
@@ -49,9 +46,7 @@ export default function AdminProvidersPage() {
   const deactivateProvider = async (providerId: string) => {
     if (!confirm("Are you sure you want to deactivate this provider?")) return;
     try {
-      await axios.patch(`http://localhost:8000/admin/providers/${providerId}/deactivate`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await API.patch(`/admin/providers/${providerId}/deactivate`, {});
       setProviders(prev => prev.map(p => p.id === providerId ? { ...p, verified: false } : p));
       toast.success("🚫 Provider deactivated.");
     } catch (err) {

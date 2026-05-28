@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import axios from "axios";
+import API from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import toast from "react-hot-toast";
@@ -21,7 +21,7 @@ export default function AdminLoginPage() {
       formData.append("username", email);
       formData.append("password", password);
 
-      const res = await axios.post(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/admin/login`, formData, {
+      const res = await API.post("/admin/login", formData, {
         headers: { "Content-Type": "application/x-www-form-urlencoded" }
       });
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, FormEvent } from "react";
-import axios from "axios";
+import API from "@/lib/api";
 import Link from "next/link";
 
 export default function ForgotPasswordPage() {
@@ -10,7 +10,7 @@ export default function ForgotPasswordPage() {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    await axios.post("http://localhost:8000/auth/forgot-password", { email });
+    await API.post("/auth/forgot-password", { email });
     setSent(true);
   };
 

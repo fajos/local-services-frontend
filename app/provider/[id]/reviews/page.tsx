@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import axios from "axios";
+import API from "@/lib/api";
 
 interface Review {
   id: string;
@@ -20,8 +20,8 @@ export default function ProviderReviews() {
 
   useEffect(() => {
     if (!id) return;
-    axios
-      .get<Review[]>(`http://localhost:8000/providers/${id}/reviews`)
+    API
+      .get<Review[]>(`/providers/${id}/reviews`)
       .then(({ data }) => setReviews(data))
       .finally(() => setLoading(false));
   }, [id]);

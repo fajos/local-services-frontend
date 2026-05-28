@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import axios from "axios";
+import API from "@/lib/api";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import {
   TagIcon,
@@ -81,14 +81,13 @@ export default function ServiceDetailsPage({
     }
 
     try {
-      await axios.post(
-        "http://localhost:8000/bookings/",
+      await API.post(
+        "/bookings/",
         {
           service_id: service!.id,
           city_or_lga: city.trim(),
           note: note.trim() || null,
-        },
-        { headers: { Authorization: `Bearer ${token}` } },
+        }
       );
       router.push("/dashboard/customer");
     } catch (err) {
@@ -101,8 +100,8 @@ export default function ServiceDetailsPage({
   useEffect(() => {
     if (!params.id) return;
 
-    axios
-      .get(`http://localhost:8000/services/${params.id}`)
+    API
+      .get(`/services/${params.id}`)
       .then((res) => {
         setService(res.data);
         if (autoOpen) setTimeout(() => cityInputRef.current?.focus(), 120);
