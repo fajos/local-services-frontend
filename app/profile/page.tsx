@@ -96,13 +96,15 @@ export default function ProfilePage() {
 
   const renderInput = (label: string, name: string, icon: any) => (
     <div className="space-y-1.5" key={name}>
-      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{label}</label>
+      <label htmlFor={name} className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{label}</label>
       <div className="relative group">
         <div className="absolute left-4 top-1/2 -translate-y-1/2">
           {icon}
         </div>
         <input
+          id={name}
           name={name}
+          placeholder={label}
           value={(form as any)[name]}
           onChange={handleChange}
           disabled={!editMode}
@@ -203,8 +205,9 @@ export default function ProfilePage() {
 
                 <div className="space-y-4">
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">ID Type</label>
+                    <label htmlFor="id_type" className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">ID Type</label>
                     <select
+                      id="id_type"
                       name="id_type"
                       value={form.id_type}
                       onChange={handleChange}
@@ -238,28 +241,30 @@ export default function ProfilePage() {
 
             {/* Business Info / CTA */}
             <div className="space-y-8">
-              <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
-                <div className="flex items-center gap-2 mb-6">
-                  <BriefcaseIcon className="w-6 h-6 text-purple-600" />
-                  <h2 className="text-lg font-black text-gray-900">Business Profile</h2>
+              {user?.is_provider ? (
+                <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
+                  <div className="flex items-center gap-2 mb-6">
+                    <BriefcaseIcon className="w-6 h-6 text-purple-600" />
+                    <h2 className="text-lg font-black text-gray-900">Business Profile</h2>
+                  </div>
+                  <div className="space-y-4">
+                    {renderInput("Business Name", "business_name", <BriefcaseIcon className="w-5 h-5 text-gray-400" />)}
+                    {renderInput("Business Address", "business_address", <BriefcaseIcon className="w-5 h-5 text-gray-400" />)}
+                    {renderInput("Business Phone", "business_phone", <BriefcaseIcon className="w-5 h-5 text-gray-400" />)}
+                    {renderInput("Open Hours", "open_hours", <BriefcaseIcon className="w-5 h-5 text-gray-400" />)}
+                  </div>
                 </div>
-                <div className="space-y-4">
-                  {renderInput("Business Name", "business_name", <BriefcaseIcon className="w-5 h-5 text-gray-400" />)}
-                  {renderInput("Business Address", "business_address", <BriefcaseIcon className="w-5 h-5 text-gray-400" />)}
-                  {renderInput("Business Phone", "business_phone", <BriefcaseIcon className="w-5 h-5 text-gray-400" />)}
-                  {renderInput("Open Hours", "open_hours", <BriefcaseIcon className="w-5 h-5 text-gray-400" />)}
+              ) : (
+                <div className="bg-indigo-600 rounded-3xl p-8 shadow-xl shadow-indigo-100 text-white flex flex-col justify-center items-center text-center">
+                  <BriefcaseIcon className="w-16 h-16 mb-4 opacity-50" />
+                  <h2 className="text-xl font-black mb-2">Want to Sell Services?</h2>
+                  <p className="text-indigo-100 text-sm mb-6 max-w-[200px]">Join our verified network of professionals today.</p>
+                  <a href="/provider/setup" className="bg-white text-indigo-600 px-8 py-3 rounded-2xl font-bold text-sm hover:bg-indigo-50 transition">
+                    Become a Provider
+                  </a>
                 </div>
-              </div>
-            ) : (
-              <div className="bg-indigo-600 rounded-3xl p-8 shadow-xl shadow-indigo-100 text-white flex flex-col justify-center items-center text-center">
-                <BriefcaseIcon className="w-16 h-16 mb-4 opacity-50" />
-                <h2 className="text-xl font-black mb-2">Want to Sell Services?</h2>
-                <p className="text-indigo-100 text-sm mb-6 max-w-[200px]">Join our verified network of professionals today.</p>
-                <a href="/provider/setup" className="bg-white text-indigo-600 px-8 py-3 rounded-2xl font-bold text-sm hover:bg-indigo-50 transition">
-                  Become a Provider
-                </a>
-              </div>
-            )}
+              )}
+            </div>
           </div>
 
           {/* Danger Zone */}
