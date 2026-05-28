@@ -223,7 +223,7 @@ export default function ProfilePage() {
                       value={form.first_name}
                       onChange={handleChange}
                       disabled={!editMode}
-                      className="w-full px-4 py-3 rounded-xl border bg-gray-50 disabled:text-gray-500"
+                      className="w-full px-4 py-3 rounded-xl border bg-gray-50 text-gray-900 disabled:text-gray-500"
                     />
                   </div>
                   <div>
@@ -234,7 +234,7 @@ export default function ProfilePage() {
                       value={form.last_name}
                       onChange={handleChange}
                       disabled={!editMode}
-                      className="w-full px-4 py-3 rounded-xl border bg-gray-50 disabled:text-gray-500"
+                      className="w-full px-4 py-3 rounded-xl border bg-gray-50 text-gray-900 disabled:text-gray-500"
                     />
                   </div>
                   <div>
@@ -245,7 +245,19 @@ export default function ProfilePage() {
                       value={form.phone}
                       onChange={handleChange}
                       disabled={!editMode}
-                      className="w-full px-4 py-3 rounded-xl border bg-gray-50 disabled:text-gray-500"
+                      className="w-full px-4 py-3 rounded-xl border bg-gray-50 text-gray-900 disabled:text-gray-500"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="address" className="block text-xs font-bold text-gray-400 uppercase mb-1">Home Address</label>
+                    <input
+                      id="address"
+                      name="address"
+                      value={form.address}
+                      onChange={handleChange}
+                      disabled={!editMode}
+                      className="w-full px-4 py-3 rounded-xl border bg-gray-50 text-gray-900 disabled:text-gray-500"
+                      placeholder="Enter your home address"
                     />
                   </div>
                 </div>
@@ -273,7 +285,7 @@ export default function ProfilePage() {
                       value={form.id_type}
                       onChange={handleChange}
                       disabled={!editMode || user?.identity_status === "verified"}
-                      className="w-full px-4 py-3 rounded-xl border bg-gray-50 disabled:text-gray-500"
+                      className="w-full px-4 py-3 rounded-xl border bg-gray-50 text-gray-900 disabled:text-gray-500"
                     >
                       <option value="">Select ID Type</option>
                       <option value="NIN">National ID (NIN)</option>
@@ -291,7 +303,7 @@ export default function ProfilePage() {
                       value={form.id_number}
                       onChange={handleChange}
                       disabled={!editMode || user?.identity_status === "verified"}
-                      className="w-full px-4 py-3 rounded-xl border bg-gray-50 disabled:text-gray-500"
+                      className="w-full px-4 py-3 rounded-xl border bg-gray-50 text-gray-900 disabled:text-gray-500"
                     />
                   </div>
                   <div>
@@ -360,7 +372,7 @@ export default function ProfilePage() {
                         value={form.business_name}
                         onChange={handleChange}
                         disabled={!editMode}
-                        className="w-full px-4 py-3 rounded-xl border bg-gray-50 disabled:text-gray-500"
+                        className="w-full px-4 py-3 rounded-xl border bg-gray-50 text-gray-900 disabled:text-gray-500"
                       />
                     </div>
                     <div>
@@ -371,7 +383,29 @@ export default function ProfilePage() {
                         value={form.business_address}
                         onChange={handleChange}
                         disabled={!editMode}
-                        className="w-full px-4 py-3 rounded-xl border bg-gray-50 disabled:text-gray-500"
+                        className="w-full px-4 py-3 rounded-xl border bg-gray-50 text-gray-900 disabled:text-gray-500"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="business_phone" className="block text-xs font-bold text-gray-400 uppercase mb-1">Business Phone</label>
+                      <input
+                        id="business_phone"
+                        name="business_phone"
+                        value={form.business_phone}
+                        onChange={handleChange}
+                        disabled={!editMode}
+                        className="w-full px-4 py-3 rounded-xl border bg-gray-50 text-gray-900 disabled:text-gray-500"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="open_hours" className="block text-xs font-bold text-gray-400 uppercase mb-1">Business Hours</label>
+                      <input
+                        id="open_hours"
+                        name="open_hours"
+                        value={form.open_hours}
+                        onChange={handleChange}
+                        disabled={!editMode}
+                        className="w-full px-4 py-3 rounded-xl border bg-gray-50 text-gray-900 disabled:text-gray-500"
                       />
                     </div>
                   </div>
