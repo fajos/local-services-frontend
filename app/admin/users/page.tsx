@@ -19,6 +19,7 @@ interface User {
   is_active: boolean;
   is_admin: boolean;
   is_super_admin: boolean;
+  is_provider?: boolean;
 }
 
 export default function AdminUsersPage() {
@@ -34,6 +35,78 @@ export default function AdminUsersPage() {
   const [resetUser, setResetUser] = useState<User | null>(null);
   const [resetPw, setResetPw] = useState("");
   const [resetError, setResetError] = useState("");
+
+  // ◉ NEW: create-user modal state
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [newUser, setNewUser] = useState({
+    first_name: "",
+    last_name: "",
+    email: "",
+    phone: "",
+    address: "",
+    password: ""
+  });
+  const [createLoading, setCreateLoading] = useState(false);
+
+  // ◉ NEW: make-provider modal state
+  const [showProviderModal, setShowProviderModal] = useState<User | null>(null);
+  const [providerData, setProviderData] = useState({
+    business_name: "",
+    business_address: "",
+    business_phone: "",
+    business_email: "",
+    open_hours: ""
+  });
+  const [providerLoading, setProviderLoading] = useState(false);
+
+  const handleMakeProvider = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!showProviderModal) return;
+    setProviderLoading(true);
+    try {
+      await API.post(`/admin/users/${showProviderModal.id}/make-provider`, providerData);
+      setUsers(prev => prev.map(u => u.id === showProviderModal.id ? { ...u, is_provider: true } : u));
+      toast.success("✅ User is now a Provider!");
+      setShowProviderModal(null);
+      setProviderData({ business_name: "", business_address: "", business_phone: "", business_email: "", open_hours: "" });
+    } catch (err: any) {
+      if (err.response?.status === 422) {
+        const details = err.response.data.detail;
+        const msg = Array.isArray(details)
+          ? details.map((d: any) => `${d.loc[d.loc.length - 1]}: ${d.msg}`).join(", ")
+          : details;
+        toast.error(`Validation Error: ${msg}`);
+      } else {
+        toast.error(err.response?.data?.detail || "❌ Failed to create provider profile.");
+      }
+    } finally {
+      setProviderLoading(false);
+    }
+  };
+
+  const handleCreateUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCreateLoading(true);
+    try {
+      const res = await API.post("/admin/users", newUser);
+      setUsers(prev => [res.data, ...prev]);
+      toast.success("✅ User created successfully!");
+      setShowCreateModal(false);
+      setNewUser({ first_name: "", last_name: "", email: "", phone: "", address: "", password: "" });
+    } catch (err: any) {
+      if (err.response?.status === 422) {
+        const details = err.response.data.detail;
+        const msg = Array.isArray(details)
+          ? details.map((d: any) => `${d.loc[d.loc.length - 1]}: ${d.msg}`).join(", ")
+          : details;
+        toast.error(`Validation Error: ${msg}`);
+      } else {
+        toast.error(err.response?.data?.detail || "❌ Failed to create user.");
+      }
+    } finally {
+      setCreateLoading(false);
+    }
+  };
 
   const makeAdmin = async (userId: string) => {
     try {
@@ -78,6 +151,18 @@ export default function AdminUsersPage() {
     } catch (err) {
       console.error("Error deactivating user", err);
       toast.error("❌ Failed to deactivate user.");
+    }
+  };
+
+  const deleteUserPermanently = async (userId: string) => {
+    if (!confirm("⚠️ DANGER: Are you sure you want to PERMANENTLY DELETE this user? This action cannot be undone and will remove all associated data (services, bookings, etc).")) return;
+    try {
+      await API.delete(`/admin/users/${userId}`);
+      setUsers(prev => prev.filter(user => user.id !== userId));
+      toast.success("🔥 User permanently deleted.");
+    } catch (err: any) {
+      console.error("Error deleting user", err);
+      toast.error(err.response?.data?.detail || "❌ Failed to delete user.");
     }
   };
 
@@ -151,6 +236,12 @@ export default function AdminUsersPage() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <h1 className="text-2xl font-bold text-cyan-400">👥 All Users</h1>
         <div className="flex flex-col sm:flex-row w-full sm:w-auto gap-3">
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded-lg text-sm font-bold transition whitespace-nowrap"
+          >
+            + Create User
+          </button>
           <input
             type="text"
             placeholder="Search users..."
@@ -295,12 +386,22 @@ export default function AdminUsersPage() {
                             Deactivate
                           </button>
                         ) : (
-                          <button
-                            onClick={() => activateUser(user.id)}
-                            className="bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white transition-all text-[10px] sm:text-xs px-3 py-1.5 rounded-lg border border-emerald-600/30"
-                          >
-                            Activate
-                          </button>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => activateUser(user.id)}
+                              className="bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white transition-all text-[10px] sm:text-xs px-3 py-1.5 rounded-lg border border-emerald-600/30"
+                            >
+                              Activate
+                            </button>
+                            {isSuperAdmin && (
+                              <button
+                                onClick={() => deleteUserPermanently(user.id)}
+                                className="bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white transition-all text-[10px] sm:text-xs px-3 py-1.5 rounded-lg border border-red-600/30 font-bold"
+                              >
+                                Delete
+                              </button>
+                            )}
+                          </div>
                         ))}
 
                       {user.id !== currentUserId &&
@@ -321,6 +422,24 @@ export default function AdminUsersPage() {
                             Make Admin
                           </button>
                         ))}
+
+                      {user.id !== currentUserId && !user.is_provider && (
+                        <button
+                          onClick={() => {
+                            setShowProviderModal(user);
+                            setProviderData({
+                              business_name: `${user.first_name} ${user.last_name}`,
+                              business_address: user.address || "",
+                              business_phone: user.phone || "",
+                              business_email: user.email,
+                              open_hours: "Mon-Fri: 9am-5pm"
+                            });
+                          }}
+                          className="bg-purple-600/20 hover:bg-purple-600 text-purple-400 hover:text-white transition-all text-[10px] sm:text-xs px-3 py-1.5 rounded-lg border border-purple-600/30"
+                        >
+                          Make Provider
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -330,6 +449,170 @@ export default function AdminUsersPage() {
         </div>
       )}
 
+
+      {/* Make Provider Modal */}
+      {showProviderModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 w-full max-w-md shadow-2xl">
+            <h2 className="text-xl font-black text-white mb-2">Upgrade to Provider</h2>
+            <p className="text-gray-400 text-xs mb-6 font-medium uppercase tracking-wider">For: {showProviderModal.first_name} {showProviderModal.last_name}</p>
+
+            <form onSubmit={handleMakeProvider} className="space-y-4">
+              <div>
+                <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Business Name</label>
+                <input
+                  required
+                  value={providerData.business_name}
+                  onChange={e => setProviderData({ ...providerData, business_name: e.target.value })}
+                  className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white focus:ring-2 focus:ring-purple-500 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Business Address</label>
+                <input
+                  required
+                  value={providerData.business_address}
+                  onChange={e => setProviderData({ ...providerData, business_address: e.target.value })}
+                  className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white focus:ring-2 focus:ring-purple-500 outline-none"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Business Phone</label>
+                  <input
+                    required
+                    value={providerData.business_phone}
+                    onChange={e => setProviderData({ ...providerData, business_phone: e.target.value })}
+                    className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white focus:ring-2 focus:ring-purple-500 outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Business Email</label>
+                  <input
+                    type="email"
+                    value={providerData.business_email}
+                    onChange={e => setProviderData({ ...providerData, business_email: e.target.value })}
+                    className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white focus:ring-2 focus:ring-purple-500 outline-none"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Working Hours</label>
+                <input
+                  required
+                  value={providerData.open_hours}
+                  onChange={e => setProviderData({ ...providerData, open_hours: e.target.value })}
+                  className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white focus:ring-2 focus:ring-purple-500 outline-none"
+                  placeholder="e.g. Mon-Fri: 9am-5pm"
+                />
+              </div>
+
+              <div className="flex gap-3 mt-8">
+                <button
+                  type="button"
+                  onClick={() => setShowProviderModal(null)}
+                  className="flex-1 py-3 bg-gray-800 hover:bg-gray-700 text-gray-400 font-bold rounded-xl transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={providerLoading}
+                  className="flex-1 py-3 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl shadow-lg shadow-purple-900/20 transition disabled:opacity-50"
+                >
+                  {providerLoading ? "Upgrading..." : "Confirm Provider"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Create User Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 w-full max-w-md shadow-2xl">
+            <h2 className="text-xl font-black text-white mb-6">Create New User</h2>
+            <form onSubmit={handleCreateUser} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">First Name</label>
+                  <input
+                    required
+                    value={newUser.first_name}
+                    onChange={e => setNewUser({ ...newUser, first_name: e.target.value })}
+                    className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white focus:ring-2 focus:ring-cyan-500 outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Last Name</label>
+                  <input
+                    required
+                    value={newUser.last_name}
+                    onChange={e => setNewUser({ ...newUser, last_name: e.target.value })}
+                    className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white focus:ring-2 focus:ring-cyan-500 outline-none"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Email Address</label>
+                <input
+                  type="email"
+                  required
+                  value={newUser.email}
+                  onChange={e => setNewUser({ ...newUser, email: e.target.value })}
+                  className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white focus:ring-2 focus:ring-cyan-500 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Phone Number</label>
+                <input
+                  required
+                  value={newUser.phone}
+                  onChange={e => setNewUser({ ...newUser, phone: e.target.value })}
+                  className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white focus:ring-2 focus:ring-cyan-500 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Home Address</label>
+                <input
+                  required
+                  value={newUser.address}
+                  onChange={e => setNewUser({ ...newUser, address: e.target.value })}
+                  className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white focus:ring-2 focus:ring-cyan-500 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Initial Password</label>
+                <input
+                  type="password"
+                  required
+                  minLength={8}
+                  value={newUser.password}
+                  onChange={e => setNewUser({ ...newUser, password: e.target.value })}
+                  className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white focus:ring-2 focus:ring-cyan-500 outline-none"
+                />
+              </div>
+              <div className="flex gap-3 mt-8">
+                <button
+                  type="button"
+                  onClick={() => setShowCreateModal(false)}
+                  className="flex-1 py-3 bg-gray-800 hover:bg-gray-700 text-gray-400 font-bold rounded-xl transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={createLoading}
+                  className="flex-1 py-3 bg-cyan-600 hover:bg-cyan-700 text-white font-bold rounded-xl shadow-lg shadow-cyan-900/20 transition disabled:opacity-50"
+                >
+                  {createLoading ? "Creating..." : "Create User"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Reset Password Modal */}
       {resetUser && (
