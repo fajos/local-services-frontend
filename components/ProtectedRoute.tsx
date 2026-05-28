@@ -1,17 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 
-export default function ProtectedRoute({ children }: { children: React.ReactNode }) {
+interface ProtectedRouteProps {
+  children: React.ReactNode;
+}
+
+export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { user, token } = useAuth();
   const router = useRouter();
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    // Delay protection check until auth is initialized
-    if (user === null && token === null) return; // still loading...
+    // If auth is still loading (user/token are not null/defined yet), wait
+    // Note: useAuth should ideally have a 'loading' state
+    if (user === null && token === null) return;
 
     if (!user || !token) {
       router.push("/login");
@@ -28,5 +33,5 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
     );
   }
 
-  return <>{children}</>;
+  return <React.Fragment>{children}</React.Fragment>;
 }
