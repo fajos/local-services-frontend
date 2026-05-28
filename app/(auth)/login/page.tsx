@@ -20,10 +20,11 @@ export default function LoginPage() {
       localStorage.setItem("userViewMode", viewMode);
       await login(email, password);
       toast.success("Login successful");
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      toast.error("Invalid credentials");
-      setError("Invalid credentials.");
+      const msg = err.response?.data?.detail || "Invalid credentials";
+      toast.error(msg);
+      setError(msg);
     }
   };
 

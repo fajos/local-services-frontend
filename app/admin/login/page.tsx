@@ -10,17 +10,18 @@ export default function AdminLoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const router = useRouter();
-  const { setUser } = useAuth();
+  const { setUser, setToken } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     toast.dismiss();
 
     try {
-      const res = await axios.post("http://localhost:8000/admin/login", {
-        username: email,
-        password: password
-      }, {
+      const formData = new URLSearchParams();
+      formData.append("username", email);
+      formData.append("password", password);
+
+      const res = await axios.post(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/admin/login`, formData, {
         headers: { "Content-Type": "application/x-www-form-urlencoded" }
       });
 
@@ -32,9 +33,7 @@ export default function AdminLoginPage() {
         return;
       }
 
-      localStorage.setItem("access_token", token);
-
-      setUser({
+      const adminUser = {
         id: payload.sub,
         email: payload.email,
         role: payload.role,
@@ -48,14 +47,23 @@ export default function AdminLoginPage() {
         is_email_confirmed: payload.is_email_confirmed || false,
         is_phone_confirmed: payload.is_phone_confirmed || false,
         is_identity_verified: payload.is_identity_verified || false,
-      });
+      };
+
+      // Update LocalStorage
+      localStorage.setItem("access_token", token);
+      localStorage.setItem("user", JSON.stringify(adminUser));
+
+      // Update Context
+      setToken(token);
+      setUser(adminUser);
 
       toast.success("✅ Admin login successful!");
       setTimeout(() => router.push("/admin/dashboard"), 800);
 
-    } catch (err) {
+    } catch (err: any) {
       console.error("Login error:", err);
-      toast.error("❌ Invalid credentials or server error.");
+      const msg = err.response?.data?.detail || "Invalid credentials or server error.";
+      toast.error(`❌ ${msg}`);
     }
   };
 

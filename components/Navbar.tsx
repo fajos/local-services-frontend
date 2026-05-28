@@ -88,7 +88,7 @@ export default function Navbar() {
                     <Link href="/admin/dashboard" className="hover:text-cyan-400 font-medium text-sm">Admin</Link>
                   )}
 
-                  {!isAdmin && user.is_provider && (
+                  {!isAdmin && user.is_provider && user.is_verified_provider && (
                     <div className="flex items-center bg-gray-800 rounded-full p-1 border border-gray-700">
                       <button
                         onClick={() => { setViewMode("customer"); router.push("/dashboard/customer"); }}

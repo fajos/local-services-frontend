@@ -26,6 +26,7 @@ type ViewMode = "customer" | "provider";
 interface AuthContextType {
   user: User | null;
   token: string | null;
+  loading: boolean;
   viewMode: ViewMode;
   toggleViewMode: () => void;
   setViewMode: (v: "customer" | "provider") => void;
@@ -33,6 +34,7 @@ interface AuthContextType {
   register: (data: any) => Promise<void>;
   logout: () => void;
   setUser: (user: User | null) => void;
+  setToken: (token: string | null) => void;
   refreshUser: () => Promise<void>;
 }
 
@@ -42,6 +44,7 @@ const AuthContext = createContext<AuthContextType>(undefined as any);
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
   const [viewMode, setViewMode] = useState<"customer" | "provider">("customer");
 
@@ -78,6 +81,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setToken(storedToken);
       setUser(JSON.parse(storedUser));
     }
+    setLoading(false);
   }, []);
 
   const login = async (email: string, password: string) => {
@@ -148,6 +152,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       value={{
         user,
         token,
+        loading,
         viewMode,
         toggleViewMode,
         setViewMode: changeMode,
@@ -155,6 +160,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         register,
         logout,
         setUser,
+        setToken,
         refreshUser,
       }}
     >
