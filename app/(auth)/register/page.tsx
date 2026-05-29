@@ -47,24 +47,28 @@ export default function RegisterPage() {
         "/auth/register",
         {
           ...form,
-          email: form.email || undefined,
+          email: form.email,
           phone: form.phone || undefined,
         }
       );
 
-      if (res.data.confirmation === "email") {
-        router.push("/confirm-email?sent=true");
-      } else {
-        localStorage.setItem("pending_user_id", res.data.user_id);
-        router.push("/confirm-phone");
-      }
+      // Redirect to email confirmation
+      router.push("/confirm-email?sent=true");
     } catch (err: any) {
       console.error("Registration error:", err);
-      setError(
-        err.response?.data?.detail ||
-        err.message ||
-        "Registration failed. Please try again."
-      );
+      if (err.response?.status === 422) {
+        const details = err.response.data.detail;
+        const msg = Array.isArray(details)
+          ? details.map((d: any) => `${d.loc[d.loc.length - 1]}: ${d.msg}`).join(", ")
+          : details;
+        setError(`Validation Error: ${msg}`);
+      } else {
+        setError(
+          err.response?.data?.detail ||
+          err.message ||
+          "Registration failed. Please try again."
+        );
+      }
     } finally {
       setLoading(false);
     }

@@ -5,6 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import VerifiedBadge from "./VerifiedBadge";
+import NotificationDropdown from "./NotificationDropdown";
 import API from "@/lib/api";
 import { toast } from "react-hot-toast";
 import {
@@ -105,6 +106,8 @@ export default function Navbar() {
                     </div>
                   )}
 
+                  <NotificationDropdown />
+
                   <Link href="/profile" className="flex items-center gap-2 hover:text-cyan-400 transition">
                     <div className="text-right">
                       <div className="text-xs font-bold leading-none flex items-center gap-1">
@@ -116,9 +119,11 @@ export default function Navbar() {
                   </Link>
 
                   <button
+                    type="button"
                     onClick={handleLogout}
                     className="text-gray-400 hover:text-red-400 transition"
                     title="Logout"
+                    aria-label="Logout"
                   >
                     <ArrowRightOnRectangleIcon className="w-6 h-6" />
                   </button>
@@ -129,7 +134,10 @@ export default function Navbar() {
             {/* Mobile Menu Button */}
             <div className="lg:hidden flex items-center">
               <button
+                type="button"
                 onClick={toggleMenu}
+                title={isOpen ? "Close menu" : "Open menu"}
+                aria-label={isOpen ? "Close menu" : "Open menu"}
                 className="p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-800 focus:outline-none transition"
               >
                 {isOpen ? <XMarkIcon className="w-6 h-6" /> : <Bars3Icon className="w-6 h-6" />}
@@ -190,7 +198,10 @@ export default function Navbar() {
                         </div>
                       </div>
                       <button
+                        type="button"
                         onClick={handleLogout}
+                        title="Logout"
+                        aria-label="Logout"
                         className="p-2 text-red-400 hover:bg-red-900/20 rounded-lg transition"
                       >
                         <ArrowRightOnRectangleIcon className="w-6 h-6" />

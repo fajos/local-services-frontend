@@ -46,7 +46,7 @@ export default function ProfilePage() {
     setUploading(true);
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "ml_default");
+    formData.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "");
 
     try {
       const res = await fetch(
@@ -184,6 +184,7 @@ export default function ProfilePage() {
             <div className="flex flex-col sm:flex-row gap-3">
               {!editMode ? (
                 <button
+                  type="button"
                   onClick={() => setEditMode(true)}
                   className="flex items-center justify-center gap-2 px-6 py-3 bg-gray-900 text-white rounded-2xl font-bold text-sm hover:bg-gray-800 transition"
                 >
@@ -192,6 +193,7 @@ export default function ProfilePage() {
               ) : (
                 <div className="flex gap-2">
                   <button
+                    type="button"
                     onClick={saveProfile}
                     disabled={saving}
                     className="flex-1 px-6 py-3 bg-cyan-600 text-white rounded-2xl font-bold text-sm hover:bg-cyan-700 disabled:opacity-50"
@@ -199,6 +201,7 @@ export default function ProfilePage() {
                     {saving ? "Saving..." : "Save Changes"}
                   </button>
                   <button
+                    type="button"
                     onClick={() => { setEditMode(false); loadData(); }}
                     className="flex-1 px-6 py-3 bg-gray-100 text-gray-700 rounded-2xl font-bold text-sm hover:bg-gray-200"
                   >
@@ -318,6 +321,9 @@ export default function ProfilePage() {
                           />
                           {editMode && user?.identity_status !== "verified" && (
                             <button
+                              type="button"
+                              aria-label="Remove image"
+                              title="Remove image"
                               onClick={() => setForm({ ...form, id_photo_url: "" })}
                               className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full shadow-lg hover:bg-red-600 transition"
                             >
@@ -416,6 +422,7 @@ export default function ProfilePage() {
 
           <div className="mt-12 pt-8 border-t border-gray-200">
             <button
+              type="button"
               onClick={deactivate}
               className="flex items-center gap-2 text-red-600 hover:text-red-700 font-bold text-sm transition"
             >

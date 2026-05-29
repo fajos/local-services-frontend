@@ -55,6 +55,18 @@ export default function AdminProvidersPage() {
     }
   };
 
+  const deleteProvider = async (providerId: string) => {
+    if (!confirm("🚨 PERMANENT DELETE: This will remove the provider profile, all their services, and all their bookings. The user will lose provider privileges. Proceed?")) return;
+    try {
+      await API.delete(`/admin/providers/${providerId}`);
+      setProviders(prev => prev.filter(p => p.id !== providerId));
+      toast.success("🗑️ Provider deleted successfully.");
+    } catch (err) {
+      console.error("Deletion failed", err);
+      toast.error("❌ Failed to delete provider.");
+    }
+  };
+
   const filteredProviders = providers.filter(p => {
     const matchesSearch =
       p.business_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -128,7 +140,7 @@ export default function AdminProvidersPage() {
                       </span>
                     )}
                   </td>
-                  <td className="p-4 text-right">
+                  <td className="p-4 text-right flex justify-end gap-2">
                     {!p.verified ? (
                       <button
                         onClick={() => verifyProvider(p.id)}
@@ -139,11 +151,18 @@ export default function AdminProvidersPage() {
                     ) : (
                       <button
                         onClick={() => deactivateProvider(p.id)}
-                        className="bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white transition-all text-xs px-3 py-1.5 rounded-lg border border-red-600/30"
+                        className="bg-yellow-600/20 hover:bg-yellow-600 text-yellow-400 hover:text-white transition-all text-xs px-3 py-1.5 rounded-lg border border-yellow-600/30"
                       >
                         Deactivate
                       </button>
                     )}
+                    <button
+                      onClick={() => deleteProvider(p.id)}
+                      className="bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white transition-all text-xs px-3 py-1.5 rounded-lg border border-red-600/30"
+                      title="Delete Provider"
+                    >
+                      Delete
+                    </button>
                   </td>
                 </tr>
               ))}
