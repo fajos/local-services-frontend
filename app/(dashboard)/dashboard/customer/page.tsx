@@ -7,10 +7,12 @@ import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import ReviewModal from "@/components/ReviewModal";
+import Chat from "@/components/Chat";
 import {
   SparklesIcon,
   XMarkIcon,
   WalletIcon,
+  ChatBubbleLeftRightIcon
 } from "@heroicons/react/24/solid";
 
 /* ---------- types ---------- */
@@ -44,6 +46,8 @@ export default function CustomerDashboard() {
     rating: 5,
     comment: "",
   });
+
+  const [activeChat, setActiveChat] = useState<{ id: string; name: string } | null>(null);
 
   /* helpers -------------------------------------------------------- */
   const handleCancel = async (id: string) => {
@@ -219,6 +223,14 @@ export default function CustomerDashboard() {
                           </button>
                         )}
 
+                      <button
+                        onClick={() => setActiveChat({ id: b.id, name: b.provider_name })}
+                        className="w-full sm:w-auto px-6 py-2 border border-cyan-200 text-cyan-600 rounded-xl font-bold text-xs transition active:scale-95 flex items-center justify-center gap-2"
+                      >
+                        <ChatBubbleLeftRightIcon className="w-4 h-4" />
+                        Message
+                      </button>
+
                       <div className="sm:ml-auto flex items-center">
                         <p className="text-[10px] text-gray-400 font-medium">
                           {formatDate(b.created_at)}
@@ -303,6 +315,17 @@ export default function CustomerDashboard() {
                 </button>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* chat overlay --------------------------------------------- */}
+        {activeChat && (
+          <div className="fixed bottom-5 right-5 z-50 w-full max-w-sm px-4 md:px-0">
+            <Chat
+              bookingId={activeChat.id}
+              recipientName={activeChat.name}
+              onClose={() => setActiveChat(null)}
+            />
           </div>
         )}
       </div>

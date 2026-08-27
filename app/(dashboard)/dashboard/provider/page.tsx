@@ -7,11 +7,15 @@ import API from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
+import Chat from "@/components/Chat";
 import {
   SparklesIcon,
   PlusCircleIcon,
   PencilSquareIcon,
   TrashIcon,
+  ChatBubbleLeftRightIcon,
+  PlayIcon,
+  CheckBadgeIcon
 } from "@heroicons/react/24/solid";
 import { CATEGORIES } from "@/utils/categories";
 
@@ -79,6 +83,8 @@ export default function DashboardPage() {
     price_type: "Fixed",
     price: "",
   });
+
+  const [activeChat, setActiveChat] = useState<{ id: string; name: string } | null>(null);
 
   /* ---------- DELETE helper ---------- */
   const deleteService = async (id: string) => {
@@ -160,6 +166,17 @@ useEffect(() => {
       );
     } catch {
       alert("Failed to accept booking");
+    }
+  };
+
+  const handleStartJob = async (id: string) => {
+    try {
+      await API.post(`/bookings/${id}/mark-in-progress`);
+      setBookings((prev) =>
+        prev.map((b) => (b.id === id ? { ...b, booking_status: "in-progress" } : b))
+      );
+    } catch {
+      alert("Failed to start job");
     }
   };
 
@@ -410,15 +427,31 @@ useEffect(() => {
                         </div>
                       ) : null}
 
-                      {b.payment_status.toLowerCase() === "paid" &&
-                        b.booking_status.toLowerCase() !== "completed" && (
-                          <button
-                            onClick={() => handleComplete(b.id)}
-                            className="w-full sm:w-auto px-6 py-2 bg-violet-600 text-white rounded-xl font-bold text-xs transition active:scale-95"
-                          >
-                            Mark as Completed
-                          </button>
-                        )}
+                      {b.booking_status.toLowerCase() === "accepted" && (
+                        <button
+                          onClick={() => handleStartJob(b.id)}
+                          className="w-full sm:w-auto px-6 py-2 bg-emerald-600 text-white rounded-xl font-bold text-xs transition active:scale-95 flex items-center justify-center gap-1"
+                        >
+                          <PlayIcon className="w-3 h-3" /> Start Job
+                        </button>
+                      )}
+
+                      {b.booking_status.toLowerCase() === "in-progress" && (
+                        <button
+                          onClick={() => handleComplete(b.id)}
+                          className="w-full sm:w-auto px-6 py-2 bg-violet-600 text-white rounded-xl font-bold text-xs transition active:scale-95 flex items-center justify-center gap-1"
+                        >
+                          <CheckBadgeIcon className="w-3 h-3" /> Mark Completed
+                        </button>
+                      )}
+
+                      <button
+                        onClick={() => setActiveChat({ id: b.id, name: b.customer_name })}
+                        className="w-full sm:w-auto px-6 py-2 border border-violet-200 text-violet-600 rounded-xl font-bold text-xs transition active:scale-95 flex items-center justify-center gap-2"
+                      >
+                        <ChatBubbleLeftRightIcon className="w-4 h-4" />
+                        Message
+                      </button>
 
                       <div className="sm:ml-auto flex items-center">
                          <p className="text-[10px] text-gray-400 font-medium">
@@ -433,6 +466,18 @@ useEffect(() => {
           )}
         </section>
       </div>
+
+      {/* chat overlay --------------------------------------------- */}
+      {activeChat && (
+        <div className="fixed bottom-5 right-5 z-50 w-full max-w-sm px-4 md:px-0">
+          <Chat
+            bookingId={activeChat.id}
+            recipientName={activeChat.name}
+            onClose={() => setActiveChat(null)}
+          />
+        </div>
+      )}
+
       {/* ---------------- edit modal ---------------- */}
       {editing && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">

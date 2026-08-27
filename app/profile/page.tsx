@@ -29,25 +29,17 @@ export default function ProfilePage() {
   const { user, token, setUser, logout } = useAuth();
 
   const [form, setForm] = useState({
-    first_name: "",
-    last_name: "",
-    phone: "",
-    address: "",
-    id_type: "",
-    id_number: "",
-    id_photo_url: "",
-    profile_photo_url: "",
-    business_name: "",
-    business_address: "",
-    business_phone: "",
-    business_email: "",
-    open_hours: "",
-    image_url: ""
+    // ...
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [uploading, setUploading] = useState(false);
+
+  // Password Change State
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [pwLoading, setPwLoading] = useState(false);
 
   // Portfolio State
   const [portfolio, setPortfolio] = useState<PortfolioItem[]>([]);
@@ -133,8 +125,11 @@ export default function ProfilePage() {
           business_address: p.business_address || "",
           business_phone: p.business_phone || "",
           business_email: p.business_email || "",
+          business_description: p.business_description || "",
           open_hours: p.open_hours ?? "",
-          image_url: p.image_url ?? ""
+          image_url: p.image_url ?? "",
+          service_radius: p.service_radius ?? 10,
+          is_online: p.is_online ?? true
         }));
 
         // Load Portfolio
@@ -205,8 +200,11 @@ export default function ProfilePage() {
           business_address: form.business_address,
           business_phone: form.business_phone,
           business_email: form.business_email,
+          business_description: form.business_description,
           open_hours: form.open_hours,
-          image_url: form.image_url
+          image_url: form.image_url,
+          service_radius: parseInt(form.service_radius.toString()),
+          is_online: form.is_online
         }, headers);
       }
 
@@ -223,12 +221,32 @@ export default function ProfilePage() {
   };
 
   const deactivate = async () => {
-    if (!confirm("Are you sure you want to deactivate your account? This action is permanent.")) return;
+    if (!confirm("Are you sure you want to deactivate your account? This action is permanent and will hide your profile/services.")) return;
     try {
       await API.patch("/users/me/deactivate", {}, { headers: { Authorization: `Bearer ${token}` } });
+      toast.success("Account deactivated.");
       logout();
     } catch (err) {
       toast.error("Could not deactivate account.");
+    }
+  };
+
+  const handleUpdatePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPassword.length < 8) {
+      toast.error("Password must be at least 8 characters");
+      return;
+    }
+    setPwLoading(true);
+    try {
+      await API.put("/users/me", { password: newPassword }, { headers: { Authorization: `Bearer ${token}` } });
+      toast.success("Password updated successfully!");
+      setShowPasswordModal(false);
+      setNewPassword("");
+    } catch (err) {
+      toast.error("Failed to update password");
+    } finally {
+      setPwLoading(false);
     }
   };
 
@@ -294,6 +312,13 @@ export default function ProfilePage() {
               <p className="text-gray-500 font-medium">{user?.email}</p>
             </div>
             <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                type="button"
+                onClick={() => setShowPasswordModal(true)}
+                className="flex items-center justify-center gap-2 px-6 py-3 bg-white text-gray-700 border border-gray-200 rounded-2xl font-bold text-sm hover:bg-gray-50 transition"
+              >
+                <ShieldCheckIcon className="w-4 h-4" /> Change Password
+              </button>
               {!editMode ? (
                 <button
                   type="button"
@@ -586,6 +611,19 @@ export default function ProfilePage() {
                       />
                     </div>
                     <div>
+                      <label htmlFor="business_description" className="block text-xs font-bold text-gray-400 uppercase mb-1">Business Description</label>
+                      <textarea
+                        id="business_description"
+                        name="business_description"
+                        value={form.business_description}
+                        onChange={handleChange}
+                        disabled={!editMode}
+                        rows={3}
+                        className="w-full px-4 py-3 rounded-xl border bg-gray-50 text-gray-900 disabled:text-gray-500 resize-none"
+                        placeholder="Tell customers about your business"
+                      />
+                    </div>
+                    <div>
                       <label htmlFor="open_hours" className="block text-xs font-bold text-gray-400 uppercase mb-1">Business Hours</label>
                       <input
                         id="open_hours"
@@ -595,6 +633,32 @@ export default function ProfilePage() {
                         disabled={!editMode}
                         className="w-full px-4 py-3 rounded-xl border bg-gray-50 text-gray-900 disabled:text-gray-500"
                       />
+                    </div>
+                    <div>
+                      <label htmlFor="service_radius" className="block text-xs font-bold text-gray-400 uppercase mb-1">Service Radius (km)</label>
+                      <input
+                        id="service_radius"
+                        name="service_radius"
+                        type="number"
+                        value={form.service_radius}
+                        onChange={handleChange}
+                        disabled={!editMode}
+                        className="w-full px-4 py-3 rounded-xl border bg-gray-50 text-gray-900 disabled:text-gray-500"
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Online Status</label>
+                        <p className="text-[10px] text-gray-500 font-medium">Toggle availability for new bookings</p>
+                      </div>
+                      <button
+                        type="button"
+                        disabled={!editMode}
+                        onClick={() => setForm({ ...form, is_online: !form.is_online })}
+                        className={`w-12 h-6 rounded-full transition relative ${form.is_online ? 'bg-cyan-600' : 'bg-gray-300'}`}
+                      >
+                        <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${form.is_online ? 'translate-x-6' : 'translate-x-0'}`} />
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -659,7 +723,12 @@ export default function ProfilePage() {
                                 onClick={async () => {
                                    if(!confirm("Remove this item?")) return;
                                    try {
-                                      await API.delete(`/providers/${user?.provider_id}/portfolio/${item.id}`);
+                                      let providerId = user?.provider_id;
+                                      if (!providerId) {
+                                        const p = (await API.get("/providers/me")).data;
+                                        providerId = p.id;
+                                      }
+                                      await API.delete(`/providers/${providerId}/portfolio/${item.id}`);
                                       setPortfolio(prev => prev.filter(p => p.id !== item.id));
                                       toast.success("Item removed");
                                    } catch { toast.error("Failed to remove"); }
@@ -691,6 +760,41 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+
+      {/* Password Modal */}
+      {showPasswordModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl border border-gray-100">
+             <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-black text-gray-900">Change Password</h2>
+                <button onClick={() => setShowPasswordModal(false)} className="p-2 hover:bg-gray-100 rounded-full transition">
+                   <XMarkIcon className="w-5 h-5 text-gray-400" />
+                </button>
+             </div>
+             <form onSubmit={handleUpdatePassword} className="space-y-6">
+                <div>
+                   <label className="block text-xs font-bold text-gray-400 uppercase mb-2">New Password</label>
+                   <input
+                      type="password"
+                      required
+                      minLength={8}
+                      value={newPassword}
+                      onChange={e => setNewPassword(e.target.value)}
+                      placeholder="At least 8 characters"
+                      className="w-full px-4 py-3 rounded-xl border bg-gray-50 text-gray-900 focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 outline-none transition"
+                   />
+                </div>
+                <button
+                   type="submit"
+                   disabled={pwLoading}
+                   className="w-full py-4 bg-gray-900 text-white font-black rounded-2xl shadow-xl hover:bg-gray-800 transition disabled:opacity-50"
+                >
+                   {pwLoading ? "UPDATING..." : "CONFIRM NEW PASSWORD"}
+                </button>
+             </form>
+          </div>
+        </div>
+      )}
     </ProtectedRoute>
   );
 }
