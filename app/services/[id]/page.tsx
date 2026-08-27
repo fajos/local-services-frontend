@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import API from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import {
   TagIcon,
