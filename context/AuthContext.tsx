@@ -23,6 +23,7 @@ interface User {
   id_type?: string;
   id_number?: string;
   id_photo_url?: string;
+  profile_photo_url?: string;
   phone?: string;
   address?: string;
   created_at?: string;

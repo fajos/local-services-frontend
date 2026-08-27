@@ -30,6 +30,8 @@ interface ServiceDetails {
     id: string;
     business_name: string;
     business_address: string;
+    business_email?: string;
+    image_url?: string;
     open_hours?: string;
     average_rating?: number; // stored *100
     verified?: boolean;
@@ -199,39 +201,67 @@ export default function ServiceDetailsPage({
         </section>
 
         {/* ------------ Provider Info ------------- */}
-        <section className="mt-10 p-6 bg-gradient-to-r from-cyan-50 to-blue-100 rounded-xl border border-blue-200 shadow-inner space-y-3">
-          <h3 className="text-lg font-bold text-blue-700 flex items-center gap-1">
-            <BuildingStorefrontIcon className="w-5 h-5" /> Provider
-          </h3>
+        <section className="mt-10 p-6 bg-gradient-to-r from-cyan-50 to-blue-100 rounded-xl border border-blue-200 shadow-inner">
+          <div className="flex flex-col md:flex-row gap-6">
+            <div className="flex-shrink-0">
+              {provider.image_url ? (
+                <img
+                  src={provider.image_url}
+                  alt={provider.business_name}
+                  className="w-20 h-20 rounded-xl object-cover border border-blue-200 shadow-sm"
+                />
+              ) : (
+                <div className="w-20 h-20 rounded-xl bg-blue-600 flex items-center justify-center text-white text-3xl font-black">
+                  {provider.business_name?.[0]}
+                </div>
+              )}
+            </div>
+            <div className="flex-1 space-y-3">
+              <h3 className="text-lg font-bold text-blue-700 flex items-center gap-1">
+                <BuildingStorefrontIcon className="w-5 h-5" /> {provider.business_name}
+              </h3>
 
-          <div className="text-sm space-y-1">
-            <p className="flex items-center gap-1">
-              <strong>Name:</strong> {provider.user.first_name} {provider.user.last_name}
-              {provider.user.is_identity_verified && <VerifiedBadge className="w-4 h-4 text-blue-500" />}
-            </p>
-            <p className="flex items-center gap-1">
-              <strong>Business:</strong> {provider.business_name}
-              {provider.verified && <VerifiedBadge className="w-4 h-4 text-emerald-500" title="Verified Business" />}
-            </p>
+              <div className="text-sm space-y-2">
+                <p className="flex items-center gap-2 text-gray-700">
+                  <span className="font-bold">Owner:</span> {provider.user.first_name} {provider.user.last_name}
+                  {provider.user.is_identity_verified && <VerifiedBadge className="w-4 h-4 text-blue-500" />}
+                </p>
+                {provider.business_email && (
+                  <p className="text-gray-600 flex items-center gap-2">
+                    <span className="font-bold">Email:</span> {provider.business_email}
+                  </p>
+                )}
+                <p className="text-gray-600 flex items-center gap-2">
+                  <span className="font-bold">Address:</span> {provider.business_address}
+                </p>
+                {provider.open_hours && (
+                  <p className="text-gray-600 flex items-center gap-2">
+                    <span className="font-bold">Hours:</span> {provider.open_hours}
+                  </p>
+                )}
+              </div>
+
+              <div className="flex items-center gap-4 mt-2">
+                {rating ? (
+                  <div className="flex items-center gap-1 text-sm bg-white/50 px-3 py-1 rounded-full border border-blue-100">
+                    <StarIcon className="w-4 h-4 text-amber-500" />
+                    <strong>{rating}</strong> <span className="text-gray-400 text-xs">/ 5</span>
+                  </div>
+                ) : (
+                  <p className="text-gray-500 text-xs italic">No ratings yet</p>
+                )}
+
+                {provider.id && (
+                  <Link
+                    href={`/providers/${provider.id}/reviews`}
+                    className="text-xs text-blue-600 font-bold hover:underline"
+                  >
+                    Read Reviews →
+                  </Link>
+                )}
+              </div>
+            </div>
           </div>
-
-          {rating ? (
-            <p className="flex items-center gap-1 text-sm">
-              <StarIcon className="w-4 h-4 text-amber-500" />
-              <strong>{rating}</strong> / 5
-            </p>
-          ) : (
-            <p className="text-gray-500 text-xs italic">No ratings yet</p>
-          )}
-
-          {provider.id && (
-            <Link
-              href={`/providers/${provider.id}/reviews`}
-              className="text-xs text-blue-600 hover:underline"
-            >
-              View Reviews
-            </Link>
-          )}
         </section>
 
         <div className="pt-6 text-sm">

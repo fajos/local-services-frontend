@@ -12,7 +12,9 @@ import {
   PhoneIcon,
   EnvelopeIcon,
   ClockIcon,
-  CheckBadgeIcon
+  CheckBadgeIcon,
+  PhotoIcon,
+  XMarkIcon
 } from "@heroicons/react/24/outline";
 
 export default function ProviderSetupPage() {
@@ -30,9 +32,11 @@ export default function ProviderSetupPage() {
     business_address: "",
     business_phone: "",
     business_email: "",
-    open_hours: ""
+    open_hours: "",
+    image_url: ""
   });
 
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -83,6 +87,51 @@ export default function ProviderSetupPage() {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 gap-6">
+              <div>
+                <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Business Logo (Optional)</label>
+                <div className="flex items-center gap-4">
+                  {form.image_url ? (
+                    <div className="relative w-16 h-16 rounded-xl overflow-hidden border">
+                      <img src={form.image_url} alt="Logo Preview" className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => setForm({ ...form, image_url: "" })}
+                        className="absolute top-0.5 right-0.5 p-0.5 bg-red-500 text-white rounded-full"
+                      >
+                        <XMarkIcon className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="w-16 h-16 rounded-xl bg-gray-50 border-2 border-dashed border-gray-200 flex items-center justify-center text-gray-300">
+                      <PhotoIcon className="w-8 h-8" />
+                    </div>
+                  )}
+                  <label className="flex-1 px-4 py-3 border-2 border-dashed border-gray-200 rounded-2xl cursor-pointer hover:bg-gray-50 transition text-center group">
+                    <p className="text-[10px] font-bold text-gray-500 group-hover:text-indigo-600">
+                      {uploading ? "UPLOADING..." : "UPLOAD LOGO"}
+                    </p>
+                    <input
+                      type="file"
+                      className="hidden"
+                      accept="image/*"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        setUploading(true);
+                        const formData = new FormData();
+                        formData.append("file", file);
+                        formData.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "");
+                        try {
+                          const res = await fetch(`https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`, { method: "POST", body: formData });
+                          const data = await res.json();
+                          setForm(prev => ({ ...prev, image_url: data.secure_url }));
+                        } catch { toast.error("Upload failed"); } finally { setUploading(false); }
+                      }}
+                    />
+                  </label>
+                </div>
+              </div>
+
               <div className="relative group">
                 <BriefcaseIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-indigo-600 transition-colors" />
                 <input

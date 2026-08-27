@@ -317,6 +317,8 @@ function badgeColor(status?: string) {
       return "bg-amber-100 text-amber-800";
     case "accepted":
       return "bg-blue-100 text-blue-800";
+    case "in-progress":
+      return "bg-purple-100 text-purple-800";
     case "completed":
       return "bg-emerald-100 text-emerald-700";
     case "declined":

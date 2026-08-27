@@ -29,10 +29,13 @@ export default function ProfilePage() {
     id_type: "",
     id_number: "",
     id_photo_url: "",
+    profile_photo_url: "",
     business_name: "",
     business_address: "",
     business_phone: "",
-    open_hours: ""
+    business_email: "",
+    open_hours: "",
+    image_url: ""
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -81,6 +84,7 @@ export default function ProfilePage() {
         id_type: u.id_type ?? "",
         id_number: u.id_number ?? "",
         id_photo_url: u.id_photo_url ?? "",
+        profile_photo_url: u.profile_photo_url ?? "",
       }));
       if (u.is_provider) {
         const p = (await API.get("/providers/me", { headers: { Authorization: `Bearer ${token}` } })).data;
@@ -89,7 +93,9 @@ export default function ProfilePage() {
           business_name: p.business_name || "",
           business_address: p.business_address || "",
           business_phone: p.business_phone || "",
-          open_hours: p.open_hours ?? ""
+          business_email: p.business_email || "",
+          open_hours: p.open_hours ?? "",
+          image_url: p.image_url ?? ""
         }));
       }
     } catch (err) {
@@ -120,7 +126,8 @@ export default function ProfilePage() {
         address: form.address,
         id_type: form.id_type,
         id_number: form.id_number,
-        id_photo_url: form.id_photo_url
+        id_photo_url: form.id_photo_url,
+        profile_photo_url: form.profile_photo_url
       }, headers);
 
       if (user?.is_provider) {
@@ -128,7 +135,9 @@ export default function ProfilePage() {
           business_name: form.business_name,
           business_address: form.business_address,
           business_phone: form.business_phone,
+          business_email: form.business_email,
           open_hours: form.open_hours,
+          image_url: form.image_url
         }, headers);
       }
 
@@ -171,8 +180,42 @@ export default function ProfilePage() {
         <div className="max-w-4xl mx-auto">
           {/* Profile Header */}
           <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 mb-8 flex flex-col md:flex-row items-center gap-6">
-            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white text-4xl font-black shadow-lg shadow-cyan-100">
-              {form.first_name?.[0]}{form.last_name?.[0]}
+            <div className="relative group">
+              {form.profile_photo_url ? (
+                <img
+                  src={form.profile_photo_url}
+                  alt="Profile"
+                  className="w-24 h-24 rounded-full object-cover shadow-lg shadow-cyan-100"
+                />
+              ) : (
+                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white text-4xl font-black shadow-lg shadow-cyan-100">
+                  {form.first_name?.[0]}{form.last_name?.[0]}
+                </div>
+              )}
+              {editMode && (
+                <label className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition cursor-pointer">
+                  <ArrowUpTrayIcon className="w-8 h-8 text-white" />
+                  <input
+                    type="file"
+                    className="hidden"
+                    accept="image/*"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      setUploading(true);
+                      const formData = new FormData();
+                      formData.append("file", file);
+                      formData.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "");
+                      try {
+                        const res = await fetch(`https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`, { method: "POST", body: formData });
+                        const data = await res.json();
+                        setForm(prev => ({ ...prev, profile_photo_url: data.secure_url }));
+                        toast.success("Profile photo updated locally. Save to persist.");
+                      } catch { toast.error("Upload failed"); } finally { setUploading(false); }
+                    }}
+                  />
+                </label>
+              )}
             </div>
             <div className="text-center md:text-left flex-1">
                 <div className="flex items-center justify-center md:justify-start gap-2">
@@ -371,6 +414,64 @@ export default function ProfilePage() {
                   <h2 className="text-lg font-black text-gray-900 mb-6">Business Profile</h2>
                   <div className="space-y-4">
                     <div>
+                      <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Business Logo</label>
+                      <div className="mt-2 flex items-center gap-4">
+                        {form.image_url ? (
+                          <div className="relative w-20 h-20 rounded-xl overflow-hidden border bg-gray-50">
+                            <img
+                              src={form.image_url}
+                              alt="Business Logo"
+                              className="w-full h-full object-cover"
+                            />
+                            {editMode && (
+                              <button
+                                type="button"
+                                onClick={() => setForm({ ...form, image_url: "" })}
+                                className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full shadow-lg hover:bg-red-600 transition"
+                              >
+                                <XMarkIcon className="w-3 h-3" />
+                              </button>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="w-20 h-20 rounded-xl bg-gray-50 border-2 border-dashed border-gray-200 flex flex-col items-center justify-center text-gray-400">
+                            <BriefcaseIcon className="w-6 h-6 mb-1" />
+                            <span className="text-[10px] font-bold">NO LOGO</span>
+                          </div>
+                        )}
+
+                        {editMode && (
+                          <label className="flex-1 flex flex-col items-center justify-center px-4 py-4 border-2 border-dashed border-gray-200 rounded-2xl cursor-pointer hover:bg-gray-50 transition group">
+                            <div className="flex flex-col items-center justify-center">
+                              <ArrowUpTrayIcon className={`w-5 h-5 mb-1 ${uploading ? 'animate-bounce text-cyan-600' : 'text-gray-400 group-hover:text-cyan-600'}`} />
+                              <p className="text-[10px] font-bold text-gray-500 group-hover:text-cyan-600">
+                                {uploading ? "UPLOADING..." : "UPLOAD LOGO"}
+                              </p>
+                            </div>
+                            <input
+                              type="file"
+                              className="hidden"
+                              onChange={async (e) => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+                                setUploading(true);
+                                const formData = new FormData();
+                                formData.append("file", file);
+                                formData.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "");
+                                try {
+                                  const res = await fetch(`https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`, { method: "POST", body: formData });
+                                  const data = await res.json();
+                                  setForm(prev => ({ ...prev, image_url: data.secure_url }));
+                                  toast.success("Logo updated locally.");
+                                } catch { toast.error("Upload failed"); } finally { setUploading(false); }
+                              }}
+                              accept="image/*"
+                            />
+                          </label>
+                        )}
+                      </div>
+                    </div>
+                    <div>
                       <label htmlFor="business_name" className="block text-xs font-bold text-gray-400 uppercase mb-1">Business Name</label>
                       <input
                         id="business_name"
@@ -379,6 +480,18 @@ export default function ProfilePage() {
                         onChange={handleChange}
                         disabled={!editMode}
                         className="w-full px-4 py-3 rounded-xl border bg-gray-50 text-gray-900 disabled:text-gray-500"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="business_email" className="block text-xs font-bold text-gray-400 uppercase mb-1">Business Email</label>
+                      <input
+                        id="business_email"
+                        name="business_email"
+                        value={form.business_email}
+                        onChange={handleChange}
+                        disabled={!editMode}
+                        className="w-full px-4 py-3 rounded-xl border bg-gray-50 text-gray-900 disabled:text-gray-500"
+                        placeholder="Enter business email"
                       />
                     </div>
                     <div>
