@@ -76,6 +76,10 @@ export default function Navbar() {
             <div className="hidden lg:flex items-center space-x-6">
               <Link href="/" className="hover:text-cyan-400 font-medium text-sm transition">Home</Link>
 
+              {user && (
+                <Link href="/dashboard/customer" className="hover:text-cyan-400 font-medium text-sm transition">My Bookings</Link>
+              )}
+
               {!user && (
                 <>
                   <Link href="/login" className="hover:text-cyan-400 font-medium text-sm transition">Login</Link>
@@ -153,6 +157,12 @@ export default function Navbar() {
               <Link href="/" onClick={closeMenu} className="flex items-center gap-3 px-3 py-3 rounded-lg text-base font-medium text-gray-300 hover:bg-gray-800 hover:text-cyan-400">
                 <HomeIcon className="w-5 h-5" /> Home
               </Link>
+
+              {user && (
+                <Link href="/dashboard/customer" onClick={closeMenu} className="flex items-center gap-3 px-3 py-3 rounded-lg text-base font-medium text-gray-300 hover:bg-gray-800 hover:text-cyan-400">
+                  <Squares2X2Icon className="w-5 h-5" /> My Bookings
+                </Link>
+              )}
 
               {user ? (
                 <>

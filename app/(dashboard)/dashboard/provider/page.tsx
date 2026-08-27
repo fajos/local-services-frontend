@@ -251,7 +251,7 @@ useEffect(() => {
   const formatDate = (d: string) => new Date(d).toLocaleString();
 
   /* if awaiting approval -------------------------------------------- */
-  if (user && (!user.is_provider || !user.is_verified_provider)) {
+  if (user && user.is_provider && !user.is_verified_provider) {
     return (
       <ProtectedRoute>
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-yellow-50 via-white to-rose-100 px-4">
@@ -264,7 +264,7 @@ useEffect(() => {
               Your provider profile is currently under review by our admin team.
               Once approved, you'll receive an email notification and gain full access to manage your business.
             </p>
-            <div className="mt-8">
+            <div className="mt-8 flex flex-col gap-3">
               <button
                 onClick={handleCheckStatus}
                 disabled={checking}
@@ -272,11 +272,20 @@ useEffect(() => {
               >
                 {checking ? "Checking..." : "Refresh Status"}
               </button>
+              <Link href="/dashboard/customer" className="text-gray-500 text-xs hover:underline font-bold uppercase tracking-widest">
+                Go to My Bookings
+              </Link>
             </div>
           </div>
         </div>
       </ProtectedRoute>
     );
+  }
+
+  /* if not a provider at all ----------------------------------------- */
+  if (user && !user.is_provider) {
+    router.replace("/dashboard/customer");
+    return null;
   }
 
   /* dashboard UI ----------------------------------------------------- */
