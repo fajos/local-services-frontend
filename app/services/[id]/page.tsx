@@ -59,6 +59,7 @@ export default function ServiceDetailsPage({
 
   /* -------------------- utils -------------------- */
   const router = useRouter();
+  const { user } = useAuth();
   const searchParams = useSearchParams();
   const autoOpen = searchParams?.get("auto") === "open-book";
 
@@ -73,6 +74,11 @@ export default function ServiceDetailsPage({
   async function handleBook() {
     if (!token) {
       router.push("/login");
+      return;
+    }
+
+    if (user && !user.is_email_confirmed) {
+      alert("📧 Please verify your email address before booking services.");
       return;
     }
 

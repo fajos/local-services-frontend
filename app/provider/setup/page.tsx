@@ -48,6 +48,13 @@ export default function ProviderSetupPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    if (user && !user.is_email_confirmed) {
+      toast.error("📧 Email verification required to become a provider.");
+      setError("Please verify your email first.");
+      return;
+    }
+
     setLoading(true);
 
     try {
