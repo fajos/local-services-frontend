@@ -29,7 +29,23 @@ export default function ProfilePage() {
   const { user, token, setUser, logout } = useAuth();
 
   const [form, setForm] = useState({
-    // ...
+    first_name: "",
+    last_name: "",
+    phone: "",
+    address: "",
+    id_type: "",
+    id_number: "",
+    id_photo_url: "",
+    profile_photo_url: "",
+    business_name: "",
+    business_address: "",
+    business_phone: "",
+    business_email: "",
+    business_description: "",
+    open_hours: "",
+    image_url: "",
+    service_radius: 10,
+    is_online: true
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
