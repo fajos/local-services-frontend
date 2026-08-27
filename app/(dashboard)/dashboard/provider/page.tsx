@@ -250,40 +250,8 @@ useEffect(() => {
 
   const formatDate = (d: string) => new Date(d).toLocaleString();
 
-  /* if awaiting approval -------------------------------------------- */
-  if (user && user.is_provider && !user.is_verified_provider) {
-    return (
-      <ProtectedRoute>
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-yellow-50 via-white to-rose-100 px-4">
-          <div className="text-center p-8 rounded-2xl bg-white/80 backdrop-blur-md shadow-lg border border-amber-100">
-            <h1 className="text-3xl font-extrabold text-amber-600 flex items-center justify-center gap-2">
-              <SparklesIcon className="w-8 h-8 text-amber-500" />
-              Awaiting Approval
-            </h1>
-            <p className="mt-4 text-sm max-w-md text-gray-600">
-              Your provider profile is currently under review by our admin team.
-              Once approved, you'll receive an email notification and gain full access to manage your business.
-            </p>
-            <div className="mt-8 flex flex-col gap-3">
-              <button
-                onClick={handleCheckStatus}
-                disabled={checking}
-                className="px-6 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-full font-semibold shadow-md transition disabled:opacity-50"
-              >
-                {checking ? "Checking..." : "Refresh Status"}
-              </button>
-              <Link href="/dashboard/customer" className="text-gray-500 text-xs hover:underline font-bold uppercase tracking-widest">
-                Go to My Bookings
-              </Link>
-            </div>
-          </div>
-        </div>
-      </ProtectedRoute>
-    );
-  }
-
-  /* if not a provider at all ----------------------------------------- */
-  if (user && !user.is_provider) {
+  /* if not a provider or not verified ----------------------------------------- */
+  if (user && (!user.is_provider || !user.is_verified_provider)) {
     router.replace("/dashboard/customer");
     return null;
   }

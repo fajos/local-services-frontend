@@ -113,6 +113,24 @@ export default function CustomerDashboard() {
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-gradient-to-br from-white via-cyan-50 to-fuchsia-100 px-4 py-8 text-sm text-gray-800">
+        {/* pending provider banner */}
+        {user?.is_provider && !user?.is_verified_provider && (
+          <div className="max-w-6xl mx-auto mb-6 bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center text-amber-600">
+                <SparklesIcon className="w-6 h-6" />
+              </div>
+              <div>
+                <p className="font-bold text-amber-900 text-xs uppercase tracking-widest">Application Pending</p>
+                <p className="text-amber-700 text-xs mt-0.5">Your provider application is currently under review by our team.</p>
+              </div>
+            </div>
+            <Link href="/profile" className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-bold uppercase rounded-xl transition shadow-md shadow-amber-200">
+              Check Status
+            </Link>
+          </div>
+        )}
+
         {/* greeting */}
         <h1 className="text-2xl font-bold text-fuchsia-700 mb-8 flex items-center gap-1">
           <SparklesIcon className="w-6 h-6 text-fuchsia-500" />

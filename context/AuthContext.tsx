@@ -114,14 +114,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setUser(me);
   
     // 4️⃣ decide default view
-    const defaultMode: ViewMode = me.is_provider ? "provider" : "customer";
+    const defaultMode: ViewMode = "customer";
     setViewMode(defaultMode);
     persistMode(defaultMode);
   
     // 5️⃣ redirect
-    router.push(
-      defaultMode === "provider" ? "/dashboard/provider" : "/dashboard/customer"
-    );
+    router.push("/dashboard/customer");
   };
 
   const register = async (data: any) => {
