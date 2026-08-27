@@ -253,10 +253,10 @@ export default function ServiceDetailsPage({
 
                 {provider.id && (
                   <Link
-                    href={`/providers/${provider.id}/reviews`}
+                    href={`/providers/${provider.id}`}
                     className="text-xs text-blue-600 font-bold hover:underline"
                   >
-                    Read Reviews →
+                    View Business Profile →
                   </Link>
                 )}
               </div>

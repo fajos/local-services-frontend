@@ -15,8 +15,15 @@ import {
   TrashIcon,
   ShieldCheckIcon,
   PhotoIcon,
-  ArrowUpTrayIcon
+  ArrowUpTrayIcon,
+  PlusIcon
 } from "@heroicons/react/24/outline";
+
+interface PortfolioItem {
+  id: string;
+  title: string;
+  image_url: string;
+}
 
 export default function ProfilePage() {
   const { user, token, setUser, logout } = useAuth();
@@ -42,6 +49,12 @@ export default function ProfilePage() {
   const [editMode, setEditMode] = useState(false);
   const [uploading, setUploading] = useState(false);
 
+  // Portfolio State
+  const [portfolio, setPortfolio] = useState<PortfolioItem[]>([]);
+  const [newPortTitle, setNewPortTitle] = useState("");
+  const [newPortImage, setNewPortImage] = useState("");
+  const [portLoading, setPortLoading] = useState(false);
+
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -65,6 +78,32 @@ export default function ProfilePage() {
       }
     } catch (err) {
       toast.error("Upload failed. Please check your configuration.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handlePortUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "");
+
+    try {
+      const res = await fetch(
+        `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
+        { method: "POST", body: formData }
+      );
+      const data = await res.json();
+      if (data.secure_url) {
+        setNewPortImage(data.secure_url);
+        toast.success("Portfolio image uploaded locally.");
+      }
+    } catch (err) {
+      toast.error("Upload failed.");
     } finally {
       setUploading(false);
     }
@@ -97,6 +136,14 @@ export default function ProfilePage() {
           open_hours: p.open_hours ?? "",
           image_url: p.image_url ?? ""
         }));
+
+        // Load Portfolio
+        try {
+          const port = (await API.get(`/providers/${p.id}/portfolio`)).data;
+          setPortfolio(port);
+        } catch (e) {
+          console.warn("Portfolio load failed (likely empty)");
+        }
       }
     } catch (err) {
       toast.error("Unable to load profile");
@@ -113,6 +160,28 @@ export default function ProfilePage() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const addPortfolio = async () => {
+    if (!newPortImage) return;
+    setPortLoading(true);
+    try {
+      const p = (await API.get("/providers/me")).data;
+      await API.post(`/providers/${p.id}/portfolio`, {
+        title: newPortTitle,
+        image_url: newPortImage
+      });
+      toast.success("Portfolio item added!");
+      setNewPortTitle("");
+      setNewPortImage("");
+      // reload portfolio
+      const port = (await API.get(`/providers/${p.id}/portfolio`)).data;
+      setPortfolio(port);
+    } catch (err) {
+      toast.error("Failed to add portfolio item");
+    } finally {
+      setPortLoading(false);
+    }
   };
 
   const saveProfile = async () => {
@@ -528,6 +597,84 @@ export default function ProfilePage() {
                       />
                     </div>
                   </div>
+                </div>
+              )}
+
+              {/* Portfolio Section */}
+              {user?.is_provider && (
+                <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
+                   <h2 className="text-lg font-black text-gray-900 mb-6">Work Portfolio</h2>
+
+                   {/* Add new item */}
+                   <div className="mb-8 space-y-4 border-b pb-8 border-gray-100">
+                      <div className="flex items-center gap-4">
+                        <div className="w-20 h-20 rounded-xl bg-gray-50 border-2 border-dashed border-gray-200 overflow-hidden">
+                           {newPortImage ? (
+                             <img src={newPortImage} className="w-full h-full object-cover" />
+                           ) : (
+                             <div className="w-full h-full flex items-center justify-center text-gray-300">
+                                <PhotoIcon className="w-8 h-8" />
+                             </div>
+                           )}
+                        </div>
+                        <div className="flex-1 space-y-2">
+                           <input
+                              type="file"
+                              id="port-file"
+                              className="hidden"
+                              accept="image/*"
+                              onChange={handlePortUpload}
+                           />
+                           <label
+                              htmlFor="port-file"
+                              className="inline-block text-[10px] font-bold text-cyan-600 cursor-pointer hover:underline"
+                           >
+                              {newPortImage ? "CHANGE PHOTO" : "UPLOAD PHOTO"}
+                           </label>
+                           <input
+                              placeholder="Photo Title (e.g. Completed Kitchen)"
+                              value={newPortTitle}
+                              onChange={(e) => setNewPortTitle(e.target.value)}
+                              className="w-full px-3 py-2 text-xs rounded-lg border border-gray-200 focus:ring-1 focus:ring-cyan-500 outline-none"
+                           />
+                        </div>
+                      </div>
+                      <button
+                        onClick={addPortfolio}
+                        disabled={!newPortImage || portLoading}
+                        className="w-full py-2 bg-cyan-600 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-cyan-700 disabled:opacity-50 transition flex items-center justify-center gap-2"
+                      >
+                         <PlusIcon className="w-4 h-4" /> Add to Portfolio
+                      </button>
+                   </div>
+
+                   {/* Gallery */}
+                   <div className="grid grid-cols-2 gap-4">
+                      {portfolio.map((item) => (
+                        <div key={item.id} className="group relative rounded-xl overflow-hidden aspect-video bg-gray-100 border">
+                           <img src={item.image_url} alt={item.title} className="w-full h-full object-cover" />
+                           <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition flex flex-col items-center justify-center p-2 text-center">
+                              <p className="text-white text-[10px] font-bold line-clamp-2 mb-1">{item.title}</p>
+                              <button
+                                onClick={async () => {
+                                   if(!confirm("Remove this item?")) return;
+                                   try {
+                                      await API.delete(`/providers/${user?.provider_id}/portfolio/${item.id}`);
+                                      setPortfolio(prev => prev.filter(p => p.id !== item.id));
+                                      toast.success("Item removed");
+                                   } catch { toast.error("Failed to remove"); }
+                                }}
+                                className="p-1 bg-red-500 rounded-full text-white hover:bg-red-600"
+                              >
+                                 <TrashIcon className="w-3 h-3" />
+                              </button>
+                           </div>
+                        </div>
+                      ))}
+                   </div>
+                   {portfolio.length === 0 && (
+                     <p className="text-center text-xs text-gray-400 italic">Your portfolio is empty.</p>
+                   )}
                 </div>
               )}
             </div>
