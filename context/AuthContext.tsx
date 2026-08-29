@@ -26,6 +26,10 @@ interface User {
   profile_photo_url?: string;
   phone?: string;
   address?: string;
+  referral_code?: string;
+  referred_by_id?: string;
+  average_customer_rating?: number;
+  customer_reviews_count?: number;
   created_at?: string;
 }
 
