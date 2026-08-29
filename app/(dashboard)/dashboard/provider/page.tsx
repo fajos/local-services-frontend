@@ -52,6 +52,8 @@ interface Booking {
     address?: string;
   } | null;
   has_customer_review?: boolean;
+  is_recurring?: boolean;
+  frequency?: string;
 }
 
 /* ---------- component ---------- */

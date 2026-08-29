@@ -17,7 +17,18 @@ import {
 
 /* ---------- types ---------- */
 interface Booking {
-  // ... existing fields ...
+  id: string;
+  service_name: string;
+  service_category: string;
+  provider_name: string;
+  booking_status: string;
+  quote_status: string;
+  quote_price?: number;
+  payment_status: string;
+  created_at: string;
+  reviewed?: boolean;
+  reschedule_proposed_at?: string;
+  reschedule_reason?: string;
   is_disputed?: boolean;
 }
 
