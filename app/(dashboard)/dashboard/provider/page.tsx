@@ -322,6 +322,12 @@ useEffect(() => {
     return null;
   }
 
+  const tabList = [
+    { id: "bookings", label: "Bookings", Icon: SparklesIcon },
+    { id: "services", label: "Services", Icon: PlusCircleIcon },
+    { id: "reviews", label: "Reviews", Icon: CheckBadgeIcon }
+  ] as const;
+
   /* dashboard UI ----------------------------------------------------- */
   return (
     <ProtectedRoute>
@@ -335,19 +341,15 @@ useEffect(() => {
 
         {/* Navigation Tabs */}
         <div className="max-w-6xl mx-auto mb-10 flex gap-4 overflow-x-auto pb-2">
-           {[
-             { id: "bookings", label: "Bookings", icon: SparklesIcon },
-             { id: "services", label: "Services", icon: PlusCircleIcon },
-             { id: "reviews", label: "Reviews", icon: CheckBadgeIcon }
-           ].map(tab => (
+           {tabList.map(tab => (
              <button
                key={tab.id}
-               onClick={() => setActiveTab(tab.id as any)}
+               onClick={() => setActiveTab(tab.id)}
                className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-bold transition whitespace-nowrap ${
                  activeTab === tab.id ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-200' : 'bg-white text-emerald-700 border border-emerald-100'
                }`}
              >
-                <tab.icon className="w-5 h-5" />
+                <tab.Icon className="w-5 h-5" />
                 {tab.label}
              </button>
            ))}
@@ -356,201 +358,205 @@ useEffect(() => {
         {/* services section */}
         {activeTab === "services" && (
           <section className="max-w-6xl mx-auto mb-14">
-          <header className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-emerald-700 flex items-center gap-1">
-              <SparklesIcon className="w-5 h-5 text-emerald-500" /> My Services
-            </h2>
-            <Link
-              href="/add-service"
-              className="inline-flex items-center gap-1 bg-gradient-to-r from-fuchsia-500 to-violet-600 hover:brightness-110 text-white text-xs font-semibold px-4 py-2 rounded-full shadow-lg active:scale-95 transition"
-            >
-              <PlusCircleIcon className="w-4 h-4" /> Add Service
-            </Link>
-          </header>
+            <header className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-emerald-700 flex items-center gap-1">
+                <SparklesIcon className="w-5 h-5 text-emerald-500" /> My Services
+              </h2>
+              <Link
+                href="/add-service"
+                className="inline-flex items-center gap-1 bg-gradient-to-r from-fuchsia-500 to-violet-600 hover:brightness-110 text-white text-xs font-semibold px-4 py-2 rounded-full shadow-lg active:scale-95 transition"
+              >
+                <PlusCircleIcon className="w-4 h-4" /> Add Service
+              </Link>
+            </header>
 
-          {services.length === 0 ? (
-            <p className="text-gray-500">You haven’t added any services yet.</p>
-          ) : (
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {services.map((s) => (
-                <article key={s.id} className="group relative rounded-2xl bg-white/90 backdrop-blur-lg border border-emerald-200 shadow-lg hover:shadow-xl hover:-translate-y-[3px] transition-all">
-                  {/* ribbon ... */}
-                  <div className="p-5">
-                    <h3 className="text-base font-bold text-emerald-700">{s.name}</h3>
-                    <p className="text-xs text-gray-600 line-clamp-3 my-1">{s.description}</p>
-                    <div className="mt-3 flex flex-wrap gap-2 text-[11px]">
-                      <span className="chip bg-emerald-100 text-emerald-800">{s.category}</span>
-                      <span className={`px-2 py-[2px] rounded-full font-semibold shadow ${glowColor(s.price_type)}`}>{s.price_type}</span>
-                      {s.price_type === "Fixed" && s.price != null && (
-                        <span className="chip bg-violet-100 text-violet-800">₦{s.price}</span>
-                      )}
-                      <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition">
-                        <button onClick={() => openEditModal(s)} className="p-[6px] rounded-full bg-blue-50 hover:bg-blue-100 shadow"><PencilSquareIcon className="w-4 h-4 text-blue-600" /></button>
-                        <button onClick={() => deleteService(s.id)} className="p-[6px] rounded-full bg-red-50 hover:bg-red-100 shadow"><TrashIcon className="w-4 h-4 text-red-600" /></button>
+            {services.length === 0 ? (
+              <p className="text-gray-500">You haven’t added any services yet.</p>
+            ) : (
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {services.map((s) => (
+                  <article key={s.id} className="group relative rounded-2xl bg-white/90 backdrop-blur-lg border border-emerald-200 shadow-lg hover:shadow-xl hover:-translate-y-[3px] transition-all">
+                    {/* ribbon ... */}
+                    <div className="p-5">
+                      <h3 className="text-base font-bold text-emerald-700">{s.name}</h3>
+                      <p className="text-xs text-gray-600 line-clamp-3 my-1">{s.description}</p>
+                      <div className="mt-3 flex flex-wrap gap-2 text-[11px]">
+                        <span className="chip bg-emerald-100 text-emerald-800">{s.category}</span>
+                        <span className={`px-2 py-[2px] rounded-full font-semibold shadow ${glowColor(s.price_type)}`}>{s.price_type}</span>
+                        {s.price_type === "Fixed" && s.price != null && (
+                          <span className="chip bg-violet-100 text-violet-800">₦{s.price}</span>
+                        )}
+                        <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition">
+                          <button onClick={() => openEditModal(s)} className="p-[6px] rounded-full bg-blue-50 hover:bg-blue-100 shadow"><PencilSquareIcon className="w-4 h-4 text-blue-600" /></button>
+                          <button onClick={() => deleteService(s.id)} className="p-[6px] rounded-full bg-red-50 hover:bg-red-100 shadow"><TrashIcon className="w-4 h-4 text-red-600" /></button>
+                        </div>
+                        <Link href={`/services/${s.id}`} className="ml-auto text-cyan-600 hover:underline">Details →</Link>
                       </div>
-                      <Link href={`/services/${s.id}`} className="ml-auto text-cyan-600 hover:underline">Details →</Link>
                     </div>
-                  </div>
-                </article>
-              ))}
-            </div>
-          )}
-        </section>
+                  </article>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
 
         {/* --- bookings section -------------------------------------- */}
         {activeTab === "bookings" && (
           <section className="max-w-6xl mx-auto">
-          <h2 className="text-xl font-bold text-fuchsia-700 mb-4 flex items-center gap-1">
-            <SparklesIcon className="w-5 h-5 text-fuchsia-500" />
-            Bookings
-          </h2>
+            <h2 className="text-xl font-bold text-fuchsia-700 mb-4 flex items-center gap-1">
+              <SparklesIcon className="w-5 h-5 text-fuchsia-500" />
+              Bookings
+            </h2>
 
-          {bookings.length === 0 ? (
-            <p className="text-gray-500">No bookings yet.</p>
-          ) : (
-            <div className="space-y-4">
-              {bookings.map((b) => (
-                <article
-                  key={b.id}
-                  className="rounded-xl bg-white/90 backdrop-blur-lg border-l-[6px] border-violet-400 shadow-md hover:shadow-lg transition overflow-hidden"
-                >
-                  <div className="p-4 sm:p-5 space-y-4">
-                    {/* header row */}
-                    <div className="flex flex-col sm:flex-row justify-between gap-4">
-                      <div className="flex-1">
-                        <h3 className="text-base font-bold text-violet-700 leading-tight">
-                          {b.service_name}
-                        </h3>
-                        <p className="text-[11px] text-gray-500 font-medium">
-                          {b.service_category}
-                        </p>
+            {bookings.length === 0 ? (
+              <p className="text-gray-500">No bookings yet.</p>
+            ) : (
+              <div className="space-y-4">
+                {bookings.map((b) => (
+                  <article
+                    key={b.id}
+                    className="rounded-xl bg-white/90 backdrop-blur-lg border-l-[6px] border-violet-400 shadow-md hover:shadow-lg transition overflow-hidden"
+                  >
+                    <div className="p-4 sm:p-5 space-y-4">
+                      {/* header row */}
+                      <div className="flex flex-col sm:flex-row justify-between gap-4">
+                        <div className="flex-1">
+                          <h3 className="text-base font-bold text-violet-700 leading-tight">
+                            {b.service_name}
+                          </h3>
+                          <p className="text-[11px] text-gray-500 font-medium">
+                            {b.service_category}
+                          </p>
 
-                        {b.note && (
-                          <div className="mt-2 p-2 bg-violet-50/50 rounded-lg border border-violet-100">
-                            <p className="italic text-xs text-gray-700">
-                              “{b.note}”
-                            </p>
-                          </div>
-                        )}
-
-                        <div className="flex flex-wrap gap-3 mt-3">
-                          <div className="text-[11px] text-gray-600 flex items-center gap-1">
-                            <span>📍</span> {b.city_or_lga}
-                          </div>
-                          {b.customer_info && (
-                            <div className="text-[11px] text-gray-600 flex items-center gap-1">
-                              <span>📞</span> {b.customer_info.phone}
+                          {b.note && (
+                            <div className="mt-2 p-2 bg-violet-50/50 rounded-lg border border-violet-100">
+                              <p className="italic text-xs text-gray-700">
+                                “{b.note}”
+                              </p>
                             </div>
+                          )}
+
+                          <div className="flex flex-wrap gap-3 mt-3">
+                            <div className="text-[11px] text-gray-600 flex items-center gap-1">
+                              <span>📍</span> {b.city_or_lga}
+                            </div>
+                            {b.customer_info && (
+                              <div className="text-[11px] text-gray-600 flex items-center gap-1">
+                                <span>📞</span> {b.customer_info.phone}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* status badges & price */}
+                        <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-2 pt-3 sm:pt-0 border-t sm:border-t-0 border-gray-100">
+                          <div className="flex flex-col items-end gap-1">
+                            <span className={`badge ${badgeColor(b.booking_status)}`}>
+                              {b.booking_status}
+                            </span>
+                            <span className={`badge ${badgeColor(b.payment_status)}`}>
+                              {b.payment_status}
+                            </span>
+                          </div>
+                          {b.quote_price != null && (
+                            <p className="text-sm font-black text-emerald-600">
+                              ₦{b.quote_price.toLocaleString()}
+                            </p>
                           )}
                         </div>
                       </div>
 
-                      {/* status badges & price */}
-                      <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-2 pt-3 sm:pt-0 border-t sm:border-t-0 border-gray-100">
-                        <div className="flex flex-col items-end gap-1">
-                          <span className={`badge ${badgeColor(b.booking_status)}`}>
-                            {b.booking_status}
-                          </span>
-                          <span className={`badge ${badgeColor(b.payment_status)}`}>
-                            {b.payment_status}
-                          </span>
-                        </div>
-                        {b.quote_price != null && (
-                          <p className="text-sm font-black text-emerald-600">
-                            ₦{b.quote_price.toLocaleString()}
-                          </p>
-                        )}
-                      </div>
-                    </div>
+                      {/* action buttons */}
+                      <div className="flex flex-col sm:flex-row gap-2 pt-2">
+                        {b.quote_price == null &&
+                        b.booking_status.toLowerCase() === "pending" ? (
+                          <>
+                            <button
+                              onClick={() => handleAccept(b.id)}
+                              className="w-full sm:w-auto px-6 py-2 bg-emerald-600 text-white rounded-xl font-bold text-xs transition active:scale-95"
+                            >
+                              Accept Booking
+                            </button>
+                            <button
+                              onClick={() => handleDecline(b.id)}
+                              className="w-full sm:w-auto px-6 py-2 border border-red-200 text-red-600 rounded-xl font-bold text-xs transition active:scale-95"
+                            >
+                              Decline
+                            </button>
+                            <button
+                              onClick={() => promptSendQuote(b.id)}
+                              className="w-full sm:w-auto px-6 py-2 bg-fuchsia-600 text-white rounded-xl font-bold text-xs transition active:scale-95"
+                            >
+                              Send Quote
+                            </button>
+                          </>
+                        ) : b.quote_status.toLowerCase() === "pending" ? (
+                          <div className="w-full text-center sm:text-left py-2 px-4 bg-amber-50 text-amber-700 rounded-lg text-xs font-bold border border-amber-100">
+                            Waiting for customer response...
+                          </div>
+                        ) : null}
 
-                    {/* action buttons */}
-                    <div className="flex flex-col sm:flex-row gap-2 pt-2">
-                      {b.quote_price == null &&
-                      b.booking_status.toLowerCase() === "pending" ? (
-                        <>
+                        {b.booking_status.toLowerCase() === "accepted" && (
                           <button
-                            onClick={() => handleAccept(b.id)}
+                            onClick={() => handleMarkEnRoute(b.id)}
+                            className="w-full sm:w-auto px-6 py-2 bg-blue-600 text-white rounded-xl font-bold text-xs transition active:scale-95 flex items-center justify-center gap-1"
+                          >
+                            <PlayIcon className="w-3 h-3" /> Start Driving
+                          </button>
+                        )}
+
+                        {b.booking_status.toLowerCase() === "en_route" && (
+                           <button
+                             onClick={() => handleStartJob(b.id)}
+                             className="w-full sm:w-auto px-6 py-2 bg-emerald-600 text-white rounded-xl font-bold text-xs transition active:scale-95 flex items-center justify-center gap-1"
+                           >
+                             <PlayIcon className="w-3 h-3" /> Arrived / Start Job
+                           </button>
+                        )}
+
+                        {b.booking_status.toLowerCase() === "in-progress" && (
+                          <button
+                            onClick={() => handleComplete(b.id)}
+                            className="w-full sm:w-auto px-6 py-2 bg-violet-600 text-white rounded-xl font-bold text-xs transition active:scale-95 flex items-center justify-center gap-1"
+                          >
+                            <CheckBadgeIcon className="w-3 h-3" /> Mark Completed
+                          </button>
+                        )}
+
+                        {b.booking_status.toLowerCase() === "completed" && !b.has_customer_review && (
+                          <button
+                            onClick={() => {
+                              setRateData({ bookingId: b.id, customerName: b.customer_name, rating: 5, comment: "" });
+                              setShowRateCustomer(true);
+                            }}
                             className="w-full sm:w-auto px-6 py-2 bg-emerald-600 text-white rounded-xl font-bold text-xs transition active:scale-95"
                           >
-                            Accept Booking
+                            Rate Customer
                           </button>
-                          <button
-                            onClick={() => handleDecline(b.id)}
-                            className="w-full sm:w-auto px-6 py-2 border border-red-200 text-red-600 rounded-xl font-bold text-xs transition active:scale-95"
-                          >
-                            Decline
-                          </button>
-                          <button
-                            onClick={() => promptSendQuote(b.id)}
-                            className="w-full sm:w-auto px-6 py-2 bg-fuchsia-600 text-white rounded-xl font-bold text-xs transition active:scale-95"
-                          >
-                            Send Quote
-                          </button>
-                        </>
-                      ) : b.quote_status.toLowerCase() === "pending" ? (
-                        <div className="w-full text-center sm:text-left py-2 px-4 bg-amber-50 text-amber-700 rounded-lg text-xs font-bold border border-amber-100">
-                          Waiting for customer response...
+                        )}
+
+                        <button
+                          onClick={() => setActiveChat({ id: b.id, name: b.customer_name })}
+                          className="w-full sm:w-auto px-6 py-2 border border-violet-200 text-violet-600 rounded-xl font-bold text-xs transition active:scale-95 flex items-center justify-center gap-2"
+                        >
+                          <ChatBubbleLeftRightIcon className="w-4 h-4" />
+                          Message
+                        </button>
+
+                        <div className="sm:ml-auto flex items-center">
+                           <p className="text-[10px] text-gray-400 font-medium">
+                            {formatDate(b.created_at)}
+                          </p>
                         </div>
-                      ) : null}
-
-                      {b.booking_status.toLowerCase() === "accepted" && (
-                        <button
-                          onClick={() => handleMarkEnRoute(b.id)}
-                          className="w-full sm:w-auto px-6 py-2 bg-blue-600 text-white rounded-xl font-bold text-xs transition active:scale-95 flex items-center justify-center gap-1"
-                        >
-                          <PlayIcon className="w-3 h-3" /> Start Driving
-                        </button>
-                      )}
-
-                      {b.booking_status.toLowerCase() === "en_route" && (
-                         <button
-                           onClick={() => handleStartJob(b.id)}
-                           className="w-full sm:w-auto px-6 py-2 bg-emerald-600 text-white rounded-xl font-bold text-xs transition active:scale-95 flex items-center justify-center gap-1"
-                         >
-                           <PlayIcon className="w-3 h-3" /> Arrived / Start Job
-                         </button>
-                      )}
-
-                      {b.booking_status.toLowerCase() === "in-progress" && (
-                        <button
-                          onClick={() => handleComplete(b.id)}
-                          className="w-full sm:w-auto px-6 py-2 bg-violet-600 text-white rounded-xl font-bold text-xs transition active:scale-95 flex items-center justify-center gap-1"
-                        >
-                          <CheckBadgeIcon className="w-3 h-3" /> Mark Completed
-                        </button>
-                      )}
-
-                      {b.booking_status.toLowerCase() === "completed" && !b.has_customer_review && (
-                        <button
-                          onClick={() => {
-                            setRateData({ bookingId: b.id, customerName: b.customer_name, rating: 5, comment: "" });
-                            setShowRateCustomer(true);
-                          }}
-                          className="w-full sm:w-auto px-6 py-2 bg-emerald-600 text-white rounded-xl font-bold text-xs transition active:scale-95"
-                        >
-                          Rate Customer
-                        </button>
-                      )}
-
-                      <button
-                        onClick={() => setActiveChat({ id: b.id, name: b.customer_name })}
-                        className="w-full sm:w-auto px-6 py-2 border border-violet-200 text-violet-600 rounded-xl font-bold text-xs transition active:scale-95 flex items-center justify-center gap-2"
-                      >
-                        <ChatBubbleLeftRightIcon className="w-4 h-4" />
-                        Message
-                      </button>
-
-                      <div className="sm:ml-auto flex items-center">
-                         <p className="text-[10px] text-gray-400 font-medium">
-                          {formatDate(b.created_at)}
-                        </p>
                       </div>
                     </div>
-                  </div>
-                </article>
-              ))}
-            </div>
-          )}
+                  </article>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+
         {activeTab === "reviews" && (
            <section className="max-w-4xl mx-auto">
               <h2 className="text-xl font-bold text-emerald-700 mb-6 flex items-center gap-2">
