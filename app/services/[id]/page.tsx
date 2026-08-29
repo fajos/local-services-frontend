@@ -57,6 +57,7 @@ export default function ServiceDetailsPage({
   const [loading, setLoading] = useState(true);
   const [city, setCity] = useState("");
   const [note, setNote] = useState("");
+  const [scheduledAt, setScheduledAt] = useState("");
 
   /* -------------------- utils -------------------- */
   const router = useRouter();
@@ -96,6 +97,7 @@ export default function ServiceDetailsPage({
           service_id: service!.id,
           city_or_lga: city.trim(),
           note: note.trim() || null,
+          scheduled_at: scheduledAt ? new Date(scheduledAt).toISOString() : null,
         }
       );
       router.push("/dashboard/customer");
@@ -190,6 +192,16 @@ export default function ServiceDetailsPage({
             placeholder="Your City / LGA (e.g., Ikeja)"
             className="input"
           />
+
+          <div>
+             <label className="block text-xs font-bold text-blue-600 mb-1">Suggest a Date & Time</label>
+             <input
+               type="datetime-local"
+               value={scheduledAt}
+               onChange={(e) => setScheduledAt(e.target.value)}
+               className="input"
+             />
+          </div>
 
           <textarea
             value={note}

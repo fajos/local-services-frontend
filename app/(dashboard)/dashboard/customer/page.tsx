@@ -29,6 +29,7 @@ interface Booking {
   reviewed?: boolean;
   reschedule_proposed_at?: string;
   reschedule_reason?: string;
+  is_disputed?: boolean;
 }
 
 interface ReviewDraft {
@@ -52,9 +53,14 @@ export default function CustomerDashboard() {
   const [activeChat, setActiveChat] = useState<{ id: string; name: string } | null>(null);
 
   const [showReschedule, setShowReschedule] = useState(false);
+  const [showDispute, setShowDispute] = useState(false);
   const [rescheduleData, setRescheduleData] = useState({
     bookingId: "",
     newDate: "",
+    reason: ""
+  });
+  const [disputeData, setDisputeData] = useState({
+    bookingId: "",
     reason: ""
   });
 
@@ -122,6 +128,21 @@ export default function CustomerDashboard() {
       setBookings(res.data);
     } catch {
       alert("❌ Failed to send reschedule request.");
+    }
+  };
+
+  const handleDisputeSubmit = async () => {
+    if (!disputeData.reason) return alert("Please provide a reason.");
+    try {
+      await API.post(`/bookings/${disputeData.bookingId}/dispute`, {
+        reason: disputeData.reason
+      });
+      setShowDispute(false);
+      alert("✅ Issue reported to admin.");
+      const res = await API.get("/bookings/me");
+      setBookings(res.data);
+    } catch {
+      alert("❌ Failed to report issue.");
     }
   };
 
@@ -288,6 +309,24 @@ export default function CustomerDashboard() {
                         Message
                       </button>
 
+                      {!b.is_disputed && (b.booking_status === "completed" || b.payment_status === "paid") && (
+                        <button
+                          onClick={() => {
+                            setDisputeData({ bookingId: b.id, reason: "" });
+                            setShowDispute(true);
+                          }}
+                          className="w-full sm:w-auto px-6 py-2 border border-red-200 text-red-600 rounded-xl font-bold text-xs transition active:scale-95"
+                        >
+                          Report Issue
+                        </button>
+                      )}
+
+                      {b.is_disputed && (
+                         <span className="px-3 py-1 bg-red-50 text-red-600 text-[10px] font-black uppercase rounded-lg border border-red-100 flex items-center">
+                            Under Review
+                         </span>
+                      )}
+
                       <div className="sm:ml-auto flex items-center">
                         <p className="text-[10px] text-gray-400 font-medium">
                           {formatDate(b.created_at)}
@@ -418,6 +457,30 @@ export default function CustomerDashboard() {
                   Send Proposal
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Dispute overlay ------------------------------------------ */}
+        {showDispute && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+            <div className="w-[90%] max-w-md rounded-3xl bg-white p-8 space-y-6 shadow-2xl">
+               <div>
+                  <h3 className="text-xl font-black text-gray-900 mb-2">Report an Issue</h3>
+                  <p className="text-gray-500 text-xs">Tell us what went wrong. An administrator will review your case within 24 hours.</p>
+               </div>
+
+               <textarea
+                  rows={4}
+                  className="w-full rounded-2xl border border-gray-200 p-4 text-sm focus:ring-2 focus:ring-red-400 outline-none"
+                  placeholder="Describe the problem in detail..."
+                  onChange={(e) => setDisputeData({ ...disputeData, reason: e.target.value })}
+               />
+
+               <div className="flex justify-end gap-3 text-sm">
+                  <button onClick={() => setShowDispute(false)} className="px-6 py-2 text-gray-500 font-bold">Cancel</button>
+                  <button onClick={handleDisputeSubmit} className="px-8 py-2 bg-red-600 text-white rounded-xl font-bold shadow-lg shadow-red-200 active:scale-95 transition">Submit Report</button>
+               </div>
             </div>
           </div>
         )}

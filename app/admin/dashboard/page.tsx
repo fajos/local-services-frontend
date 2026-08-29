@@ -10,6 +10,7 @@ interface Summary {
   total_providers: number;
   unverified_providers: number;
   pending_payouts: number;
+  total_disputes: number;
 }
 
 export default function AdminDashboardHome() {
@@ -70,6 +71,13 @@ export default function AdminDashboardHome() {
           icon="💵"
           color="from-green-500 to-green-700"
           href="/admin/bookings/paid"
+        />
+        <DashboardCard
+          title="Open Disputes"
+          count={summary.total_disputes}
+          icon="⚠️"
+          color="from-red-500 to-red-700"
+          href="/admin/disputes"
         />
       </div>
     </div>
