@@ -17,19 +17,15 @@ import {
 
 /* ---------- types ---------- */
 interface Booking {
-  id: string;
-  service_name: string;
-  service_category: string;
-  provider_name: string;
-  booking_status: string;
-  quote_status: string;
-  quote_price?: number;
-  payment_status: string;
-  created_at: string;
-  reviewed?: boolean;
-  reschedule_proposed_at?: string;
-  reschedule_reason?: string;
+  // ... existing fields ...
   is_disputed?: boolean;
+}
+
+interface Favorite {
+  id: string;
+  business_name: string;
+  image_url?: string;
+  category: string;
 }
 
 interface ReviewDraft {
@@ -43,6 +39,7 @@ export default function CustomerDashboard() {
   /* state & hooks -------------------------------------------------- */
   const { user, token } = useAuth();
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [favorites, setFavorites] = useState<Favorite[]>([]);
   const [showReview, setShowReview] = useState(false);
   const [draft, setDraft] = useState<ReviewDraft>({
     bookingId: "",
@@ -152,6 +149,10 @@ export default function CustomerDashboard() {
     API.get("/bookings/me")
       .then((res) => setBookings(res.data))
       .catch(() => setBookings([]));
+
+    API.get("/providers/favorites/me")
+      .then((res) => setFavorites(res.data))
+      .catch(() => setFavorites([]));
   }, [token]);
 
   const formatDate = (d: string) => new Date(d).toLocaleString();
@@ -179,13 +180,21 @@ export default function CustomerDashboard() {
         )}
 
         {/* greeting */}
-        <h1 className="text-2xl font-bold text-fuchsia-700 mb-8 flex items-center gap-1">
-          <SparklesIcon className="w-6 h-6 text-fuchsia-500" />
-          Welcome{user?.first_name ? `, ${user.first_name}` : ""}!
-        </h1>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+           <h1 className="text-2xl font-bold text-fuchsia-700 flex items-center gap-1">
+             <SparklesIcon className="w-6 h-6 text-fuchsia-500" />
+             Welcome{user?.first_name ? `, ${user.first_name}` : ""}!
+           </h1>
+           <div className="flex items-center gap-3 bg-white p-2 rounded-2xl border border-gray-100 shadow-sm">
+              <span className="text-[10px] font-black text-gray-400 uppercase ml-2">Invite Code:</span>
+              <code className="px-3 py-1 bg-fuchsia-50 text-fuchsia-700 rounded-lg font-bold text-xs">{user?.referral_code}</code>
+           </div>
+        </div>
 
-        {/* bookings section */}
-        <section className="max-w-6xl mx-auto">
+        <div className="grid lg:grid-cols-3 gap-10">
+          <div className="lg:col-span-2">
+            {/* bookings section */}
+            <section>
           <h2 className="text-xl font-bold text-cyan-700 mb-4 flex items-center gap-1">
             <SparklesIcon className="w-5 h-5 text-cyan-500" />
             Your Bookings
@@ -338,7 +347,41 @@ export default function CustomerDashboard() {
               ))}
             </div>
           )}
-        </section>
+            </section>
+          </div>
+
+          <aside>
+             <h2 className="text-xl font-bold text-pink-700 mb-4 flex items-center gap-1">
+               <SparklesIcon className="w-5 h-5 text-pink-500" />
+               Saved Pros
+             </h2>
+             <div className="space-y-4">
+                {favorites.length === 0 ? (
+                   <div className="p-8 bg-white/60 rounded-3xl border border-dashed border-gray-300 text-center">
+                      <p className="text-gray-400 text-xs font-bold uppercase">No favorites yet</p>
+                   </div>
+                ) : (
+                   favorites.map(f => (
+                      <Link key={f.id} href={`/providers/${f.id}`}>
+                         <article className="p-3 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition flex items-center gap-3 cursor-pointer group mb-3">
+                            <div className="w-12 h-12 rounded-xl bg-gray-100 overflow-hidden flex-shrink-0">
+                               {f.image_url ? (
+                                  <img src={f.image_url} className="w-full h-full object-cover" />
+                               ) : (
+                                  <div className="w-full h-full flex items-center justify-center text-gray-400 text-lg font-black uppercase">{f.business_name[0]}</div>
+                               )}
+                            </div>
+                            <div className="flex-1 overflow-hidden">
+                               <p className="font-bold text-gray-900 truncate group-hover:text-fuchsia-600 transition">{f.business_name}</p>
+                               <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest">{f.category}</p>
+                            </div>
+                         </article>
+                      </Link>
+                   ))
+                )}
+             </div>
+          </aside>
+        </div>
 
         {/* review overlay ------------------------------------------- */}
         {showReview && (

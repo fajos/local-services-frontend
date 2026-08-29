@@ -336,6 +336,10 @@ export default function ProfilePage() {
                 {user?.is_identity_verified && <VerifiedBadge className="w-6 h-6 text-blue-500" />}
               </div>
               <p className="text-gray-500 font-medium">{user?.email}</p>
+              <div className="mt-2 flex items-center gap-2">
+                 <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Referral Code:</span>
+                 <code className="px-2 py-1 bg-gray-100 rounded text-cyan-700 font-bold text-xs">{user?.referral_code || '---'}</code>
+              </div>
             </div>
             <div className="flex flex-col sm:flex-row gap-3">
               <button
