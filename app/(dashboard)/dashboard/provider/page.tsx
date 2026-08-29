@@ -51,6 +51,7 @@ interface Booking {
     phone: string;
     address?: string;
   } | null;
+  has_customer_review?: boolean;
 }
 
 /* ---------- component ---------- */
@@ -85,6 +86,14 @@ export default function DashboardPage() {
   });
 
   const [activeChat, setActiveChat] = useState<{ id: string; name: string } | null>(null);
+
+  const [showRateCustomer, setShowRateCustomer] = useState(false);
+  const [rateData, setRateData] = useState({
+    bookingId: "",
+    customerName: "",
+    rating: 5,
+    comment: ""
+  });
 
   /* ---------- DELETE helper ---------- */
   const deleteService = async (id: string) => {
@@ -201,6 +210,22 @@ useEffect(() => {
       );
     } catch {
       alert("Failed to decline booking");
+    }
+  };
+
+  const handleRateCustomerSubmit = async () => {
+    try {
+      await API.post(`/bookings/${rateData.bookingId}/rate-customer`, {
+        rating: rateData.rating,
+        comment: rateData.comment || null
+      });
+      setShowRateCustomer(false);
+      alert("✅ Customer rated successfully!");
+      // reload
+      const res = await API.get("/bookings/provider/me");
+      setBookings(res.data);
+    } catch {
+      alert("❌ Failed to rate customer.");
     }
   };
 
@@ -422,6 +447,18 @@ useEffect(() => {
                         </button>
                       )}
 
+                      {b.booking_status.toLowerCase() === "completed" && !b.has_customer_review && (
+                        <button
+                          onClick={() => {
+                            setRateData({ bookingId: b.id, customerName: b.customer_name, rating: 5, comment: "" });
+                            setShowRateCustomer(true);
+                          }}
+                          className="w-full sm:w-auto px-6 py-2 bg-emerald-600 text-white rounded-xl font-bold text-xs transition active:scale-95"
+                        >
+                          Rate Customer
+                        </button>
+                      )}
+
                       <button
                         onClick={() => setActiveChat({ id: b.id, name: b.customer_name })}
                         className="w-full sm:w-auto px-6 py-2 border border-violet-200 text-violet-600 rounded-xl font-bold text-xs transition active:scale-95 flex items-center justify-center gap-2"
@@ -452,6 +489,47 @@ useEffect(() => {
             recipientName={activeChat.name}
             onClose={() => setActiveChat(null)}
           />
+        </div>
+      )}
+
+      {/* Rate Customer overlay --------------------------------------- */}
+      {showRateCustomer && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="w-[90%] max-w-sm rounded-2xl bg-white p-6 space-y-4 shadow-2xl">
+            <h3 className="text-lg font-bold text-gray-800 flex items-center gap-1">
+              <SparklesIcon className="w-5 h-5 text-emerald-500" />
+              Rate {rateData.customerName}
+            </h3>
+
+            <div className="flex gap-1">
+              {[1, 2, 3, 4, 5].map((n) => (
+                <button
+                  key={n}
+                  onClick={() => setRateData({ ...rateData, rating: n })}
+                  className={
+                    n <= rateData.rating
+                      ? "text-yellow-400 text-2xl"
+                      : "text-gray-300 text-2xl"
+                  }
+                >
+                  ★
+                </button>
+              ))}
+            </div>
+
+            <textarea
+              rows={3}
+              placeholder="How was your experience with this customer?"
+              value={rateData.comment}
+              onChange={(e) => setRateData({ ...rateData, comment: e.target.value })}
+              className="w-full rounded border border-gray-300 p-2 text-sm focus:ring-2 focus:ring-emerald-400"
+            />
+
+            <div className="flex justify-end gap-3 text-sm">
+              <button onClick={() => setShowRateCustomer(false)} className="text-gray-600 hover:underline">Cancel</button>
+              <button onClick={handleRateCustomerSubmit} className="px-6 py-2 bg-emerald-600 text-white rounded-xl font-bold text-xs transition active:scale-95">Submit Rating</button>
+            </div>
+          </div>
         </div>
       )}
 

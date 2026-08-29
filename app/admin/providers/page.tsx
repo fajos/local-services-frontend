@@ -11,6 +11,7 @@ interface Provider {
   business_phone: string;
   business_address: string;
   verified: boolean;
+  background_checked?: boolean;
 }
 
 export default function AdminProvidersPage() {
@@ -52,6 +53,17 @@ export default function AdminProvidersPage() {
     } catch (err) {
       console.error("Deactivation failed", err);
       toast.error("❌ Failed to deactivate provider.");
+    }
+  };
+
+  const toggleBackgroundCheck = async (providerId: string) => {
+    try {
+      const res = await API.patch(`/admin/providers/${providerId}/toggle-background-check`, {});
+      setProviders(prev => prev.map(p => p.id === providerId ? { ...p, background_checked: res.data.background_checked } : p));
+      toast.success("✅ Background check status updated!");
+    } catch (err) {
+      console.error("BG check update failed", err);
+      toast.error("❌ Failed to update BG check status.");
     }
   };
 
@@ -141,6 +153,13 @@ export default function AdminProvidersPage() {
                     )}
                   </td>
                   <td className="p-4 text-right flex justify-end gap-2">
+                    <button
+                      onClick={() => toggleBackgroundCheck(p.id)}
+                      className={`${p.background_checked ? 'bg-cyan-600/30 text-cyan-400' : 'bg-gray-700/30 text-gray-500'} hover:bg-cyan-600 hover:text-white transition-all text-xs px-3 py-1.5 rounded-lg border border-cyan-600/30`}
+                      title="Toggle Background Check"
+                    >
+                      {p.background_checked ? '🛡️ Verified' : '🛡️ BG Check'}
+                    </button>
                     {!p.verified ? (
                       <button
                         onClick={() => verifyProvider(p.id)}

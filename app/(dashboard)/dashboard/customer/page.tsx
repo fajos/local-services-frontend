@@ -27,6 +27,8 @@ interface Booking {
   payment_status: string;
   created_at: string;
   reviewed?: boolean;
+  reschedule_proposed_at?: string;
+  reschedule_reason?: string;
 }
 
 interface ReviewDraft {
@@ -48,6 +50,13 @@ export default function CustomerDashboard() {
   });
 
   const [activeChat, setActiveChat] = useState<{ id: string; name: string } | null>(null);
+
+  const [showReschedule, setShowReschedule] = useState(false);
+  const [rescheduleData, setRescheduleData] = useState({
+    bookingId: "",
+    newDate: "",
+    reason: ""
+  });
 
   /* helpers -------------------------------------------------------- */
   const handleCancel = async (id: string) => {
@@ -96,6 +105,23 @@ export default function CustomerDashboard() {
       alert("✅ Payment successful!");
     } catch {
       alert("❌ Payment failed.");
+    }
+  };
+
+  const handleRescheduleSubmit = async () => {
+    if (!rescheduleData.newDate) return alert("Please select a date.");
+    try {
+      await API.patch(`/bookings/${rescheduleData.bookingId}/reschedule`, {
+        new_date: new Date(rescheduleData.newDate).toISOString(),
+        reason: rescheduleData.reason || null
+      });
+      setShowReschedule(false);
+      alert("✅ Reschedule request sent!");
+      // Reload bookings
+      const res = await API.get("/bookings/me");
+      setBookings(res.data);
+    } catch {
+      alert("❌ Failed to send reschedule request.");
     }
   };
 
@@ -197,6 +223,19 @@ export default function CustomerDashboard() {
                       {b.booking_status.toLowerCase() === "pending" && (
                         <button onClick={() => handleCancel(b.id)} className="w-full sm:w-auto px-6 py-2 border border-red-200 text-red-600 rounded-xl font-bold text-xs transition active:scale-95">
                           Cancel Request
+                        </button>
+                      )}
+
+                      {/* Reschedule */}
+                      {b.booking_status.toLowerCase() === "accepted" && (
+                        <button
+                          onClick={() => {
+                            setRescheduleData({ bookingId: b.id, newDate: "", reason: "" });
+                            setShowReschedule(true);
+                          }}
+                          className="w-full sm:w-auto px-6 py-2 border border-cyan-200 text-cyan-600 rounded-xl font-bold text-xs transition active:scale-95"
+                        >
+                          Reschedule
                         </button>
                       )}
 
@@ -327,9 +366,56 @@ export default function CustomerDashboard() {
                       alert("❌ Could not submit review.");
                     }
                   }}
-                  className="btn-emerald"
+                  className="px-6 py-2 bg-emerald-600 text-white rounded-xl font-bold text-xs transition active:scale-95"
                 >
                   Submit
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Reschedule overlay --------------------------------------- */}
+        {showReschedule && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+            <div className="w-[90%] max-w-sm rounded-2xl bg-white p-6 space-y-4 shadow-2xl">
+              <h3 className="text-lg font-bold text-gray-800 flex items-center gap-1">
+                <SparklesIcon className="w-5 h-5 text-cyan-500" />
+                Propose New Time
+              </h3>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 mb-1">New Date & Time</label>
+                  <input
+                    type="datetime-local"
+                    className="w-full rounded border border-gray-300 p-2 text-sm focus:ring-2 focus:ring-cyan-400"
+                    onChange={(e) => setRescheduleData({ ...rescheduleData, newDate: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 mb-1">Reason (Optional)</label>
+                  <textarea
+                    rows={2}
+                    className="w-full rounded border border-gray-300 p-2 text-sm focus:ring-2 focus:ring-cyan-400"
+                    placeholder="Why do you need to reschedule?"
+                    onChange={(e) => setRescheduleData({ ...rescheduleData, reason: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 text-sm pt-2">
+                <button
+                  onClick={() => setShowReschedule(false)}
+                  className="text-gray-600 hover:underline"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleRescheduleSubmit}
+                  className="px-6 py-2 bg-cyan-600 text-white rounded-xl font-bold text-xs transition active:scale-95"
+                >
+                  Send Proposal
                 </button>
               </div>
             </div>
