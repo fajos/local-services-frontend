@@ -65,6 +65,9 @@ export default function DashboardPage() {
 
   const [flash, setFlash] = useState<string | null>(null);
 
+  const [activeTab, setActiveTab] = useState<"bookings" | "services" | "reviews">("bookings");
+  const [reviews, setReviews] = useState<any[]>([]);
+
   const { user, refreshUser } = useAuth();
   const [checking, setChecking] = useState(false);
 
@@ -90,6 +93,9 @@ export default function DashboardPage() {
   const [activeChat, setActiveChat] = useState<{ id: string; name: string } | null>(null);
 
   const [showRateCustomer, setShowRateCustomer] = useState(false);
+  const [showRespondModal, setShowRespondModal] = useState(false);
+  const [selectedReview, setSelectedReview] = useState<any>(null);
+  const [responseMsg, setResponseMsg] = useState("");
   const [rateData, setRateData] = useState({
     bookingId: "",
     customerName: "",
@@ -180,6 +186,17 @@ useEffect(() => {
     }
   };
 
+  const handleMarkEnRoute = async (id: string) => {
+    try {
+      await API.post(`/bookings/${id}/mark-en-route`);
+      setBookings((prev) =>
+        prev.map((b) => (b.id === id ? { ...b, booking_status: "en_route" } : b))
+      );
+    } catch {
+      alert("Failed to update status to en route");
+    }
+  };
+
   const handleStartJob = async (id: string) => {
     try {
       await API.post(`/bookings/${id}/mark-in-progress`);
@@ -231,6 +248,24 @@ useEffect(() => {
     }
   };
 
+  const handleRespondSubmit = async () => {
+    if (!responseMsg) return;
+    try {
+      await API.post(`/reviews/${selectedReview.id}/respond`, {
+        response: responseMsg
+      });
+      setShowRespondModal(false);
+      setResponseMsg("");
+      alert("✅ Response posted!");
+      // reload reviews
+      const p = (await API.get("/providers/me")).data;
+      const res = await API.get(`/reviews/provider/${p.id}`);
+      setReviews(res.data);
+    } catch {
+      alert("❌ Failed to post response.");
+    }
+  };
+
   function glowColor(pt: string) {
     switch (pt) {
       case "Fixed":
@@ -266,6 +301,10 @@ useEffect(() => {
     if (!token || !user?.is_provider || !user?.is_verified_provider) return;
 
     API.get("/providers/me")
+      .then((res) => {
+         const p = res.data;
+         API.get(`/reviews/provider/${p.id}`).then(r => setReviews(r.data));
+      })
       .catch(() => router.push("/"));
 
     API.get("/services/me")
@@ -293,8 +332,30 @@ useEffect(() => {
         </div>
       )}
       <div className="min-h-screen bg-gradient-to-br from-white via-lime-50 to-emerald-100 px-4 py-8 md:px-10 text-sm text-gray-800">
+
+        {/* Navigation Tabs */}
+        <div className="max-w-6xl mx-auto mb-10 flex gap-4 overflow-x-auto pb-2">
+           {[
+             { id: "bookings", label: "Bookings", icon: SparklesIcon },
+             { id: "services", label: "Services", icon: PlusCircleIcon },
+             { id: "reviews", label: "Reviews", icon: CheckBadgeIcon }
+           ].map(tab => (
+             <button
+               key={tab.id}
+               onClick={() => setActiveTab(tab.id as any)}
+               className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-bold transition whitespace-nowrap ${
+                 activeTab === tab.id ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-200' : 'bg-white text-emerald-700 border border-emerald-100'
+               }`}
+             >
+                <tab.icon className="w-5 h-5" />
+                {tab.label}
+             </button>
+           ))}
+        </div>
+
         {/* services section */}
-        <section className="max-w-6xl mx-auto mb-14">
+        {activeTab === "services" && (
+          <section className="max-w-6xl mx-auto mb-14">
           <header className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-emerald-700 flex items-center gap-1">
               <SparklesIcon className="w-5 h-5 text-emerald-500" /> My Services
@@ -337,7 +398,8 @@ useEffect(() => {
         </section>
 
         {/* --- bookings section -------------------------------------- */}
-        <section className="max-w-6xl mx-auto">
+        {activeTab === "bookings" && (
+          <section className="max-w-6xl mx-auto">
           <h2 className="text-xl font-bold text-fuchsia-700 mb-4 flex items-center gap-1">
             <SparklesIcon className="w-5 h-5 text-fuchsia-500" />
             Bookings
@@ -433,11 +495,20 @@ useEffect(() => {
 
                       {b.booking_status.toLowerCase() === "accepted" && (
                         <button
-                          onClick={() => handleStartJob(b.id)}
-                          className="w-full sm:w-auto px-6 py-2 bg-emerald-600 text-white rounded-xl font-bold text-xs transition active:scale-95 flex items-center justify-center gap-1"
+                          onClick={() => handleMarkEnRoute(b.id)}
+                          className="w-full sm:w-auto px-6 py-2 bg-blue-600 text-white rounded-xl font-bold text-xs transition active:scale-95 flex items-center justify-center gap-1"
                         >
-                          <PlayIcon className="w-3 h-3" /> Start Job
+                          <PlayIcon className="w-3 h-3" /> Start Driving
                         </button>
+                      )}
+
+                      {b.booking_status.toLowerCase() === "en_route" && (
+                         <button
+                           onClick={() => handleStartJob(b.id)}
+                           className="w-full sm:w-auto px-6 py-2 bg-emerald-600 text-white rounded-xl font-bold text-xs transition active:scale-95 flex items-center justify-center gap-1"
+                         >
+                           <PlayIcon className="w-3 h-3" /> Arrived / Start Job
+                         </button>
                       )}
 
                       {b.booking_status.toLowerCase() === "in-progress" && (
@@ -480,7 +551,45 @@ useEffect(() => {
               ))}
             </div>
           )}
-        </section>
+        {activeTab === "reviews" && (
+           <section className="max-w-4xl mx-auto">
+              <h2 className="text-xl font-bold text-emerald-700 mb-6 flex items-center gap-2">
+                 <CheckBadgeIcon className="w-6 h-6" /> Your Reviews
+              </h2>
+              {reviews.length === 0 ? (
+                 <p className="text-gray-500 bg-white p-8 rounded-3xl border border-dashed border-gray-200 text-center uppercase font-black text-xs">No reviews yet</p>
+              ) : (
+                 <div className="grid gap-6">
+                    {reviews.map(r => (
+                       <article key={r.id} className="p-6 bg-white rounded-3xl border border-emerald-100 shadow-sm">
+                          <div className="flex justify-between items-start mb-4">
+                             <div>
+                                <p className="font-black text-gray-900 text-lg">⭐ {r.rating}/5</p>
+                                <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">From {r.customer_name} for {r.service_name}</p>
+                             </div>
+                             <p className="text-[10px] text-gray-300 font-bold uppercase">{formatDate(r.created_at)}</p>
+                          </div>
+                          <p className="text-gray-700 italic mb-6">"{r.comment || 'No comment provided.'}"</p>
+
+                          {r.provider_response ? (
+                             <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100 border-l-4 border-l-emerald-500">
+                                <p className="text-[10px] font-black text-emerald-600 uppercase mb-1">Your Response:</p>
+                                <p className="text-sm text-emerald-800">{r.provider_response}</p>
+                             </div>
+                          ) : (
+                             <button
+                               onClick={() => { setSelectedReview(r); setShowRespondModal(true); }}
+                               className="px-6 py-2 border border-emerald-200 text-emerald-600 rounded-xl font-black text-xs uppercase hover:bg-emerald-50 transition"
+                             >
+                                Respond to Review
+                             </button>
+                          )}
+                       </article>
+                    ))}
+                 </div>
+              )}
+           </section>
+        )}
       </div>
 
       {/* chat overlay --------------------------------------------- */}
@@ -491,6 +600,37 @@ useEffect(() => {
             recipientName={activeChat.name}
             onClose={() => setActiveChat(null)}
           />
+        </div>
+      )}
+
+      {/* Respond to Review Modal ------------------------------------ */}
+      {showRespondModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+           <div className="w-[90%] max-w-md bg-white rounded-3xl p-8 space-y-6 shadow-2xl">
+              <div>
+                 <h3 className="text-xl font-black text-gray-900 mb-1">Reply to {selectedReview?.customer_name}</h3>
+                 <p className="text-xs text-gray-500">Professional responses build trust with future customers.</p>
+              </div>
+
+              <textarea
+                 rows={4}
+                 value={responseMsg}
+                 onChange={(e) => setResponseMsg(e.target.value)}
+                 placeholder="Thank the customer or address their concerns..."
+                 className="w-full rounded-2xl border border-gray-200 p-4 text-sm focus:ring-2 focus:ring-emerald-400 outline-none"
+              />
+
+              <div className="flex justify-end gap-3 text-sm">
+                 <button onClick={() => setShowRespondModal(false)} className="px-6 py-2 text-gray-500 font-bold">Cancel</button>
+                 <button
+                   onClick={handleRespondSubmit}
+                   disabled={!responseMsg}
+                   className="px-8 py-2 bg-emerald-600 text-white rounded-xl font-bold shadow-lg shadow-emerald-100 active:scale-95 transition disabled:opacity-50"
+                 >
+                    Post Response
+                 </button>
+              </div>
+           </div>
         </div>
       )}
 

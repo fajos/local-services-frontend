@@ -39,24 +39,36 @@ interface PortfolioItem {
   image_url: string;
 }
 
+interface Review {
+  id: string;
+  rating: number;
+  comment: string;
+  provider_response?: string;
+  customer_name: string;
+  created_at: string;
+}
+
 export default function BusinessProfilePage({ params }: { params: { id: string } }) {
   const [provider, setProvider] = useState<ProviderProfile | null>(null);
   const [services, setServices] = useState<Service[]>([]);
   const [portfolio, setPortfolio] = useState<PortfolioItem[]>([]);
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [pRes, sRes, portRes] = await Promise.allSettled([
+        const [pRes, sRes, portRes, revRes] = await Promise.allSettled([
           API.get(`/providers/${params.id}`),
           API.get(`/services/provider/${params.id}`),
-          API.get(`/providers/${params.id}/portfolio`)
+          API.get(`/providers/${params.id}/portfolio`),
+          API.get(`/reviews/provider/${params.id}`)
         ]);
 
         if (pRes.status === "fulfilled") setProvider(pRes.value.data);
         if (sRes.status === "fulfilled") setServices(sRes.value.data);
         if (portRes.status === "fulfilled") setPortfolio(portRes.value.data);
+        if (revRes.status === "fulfilled") setReviews(revRes.value.data);
       } catch (err) {
         console.error(err);
       } finally {
@@ -209,6 +221,36 @@ export default function BusinessProfilePage({ params }: { params: { id: string }
                 </Link>
               ))}
            </div>
+        </div>
+
+        {/* Reviews Section */}
+        <div className="space-y-6 pt-10">
+           <h2 className="text-xl font-black text-gray-900">Customer Feedback</h2>
+           {reviews.length === 0 ? (
+              <p className="text-gray-400 italic text-sm">No reviews yet for this provider.</p>
+           ) : (
+              <div className="space-y-6">
+                 {reviews.map(r => (
+                    <article key={r.id} className="p-6 bg-white rounded-3xl border border-gray-100 space-y-4">
+                       <div className="flex justify-between items-start">
+                          <div>
+                             <p className="font-black text-gray-900 text-lg">⭐ {r.rating}/5</p>
+                             <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">From {r.customer_name}</p>
+                          </div>
+                          <p className="text-[10px] text-gray-300 font-bold uppercase tracking-widest">{new Date(r.created_at).toLocaleDateString()}</p>
+                       </div>
+                       <p className="text-gray-600 italic">"{r.comment || 'No comment provided.'}"</p>
+
+                       {r.provider_response && (
+                          <div className="mt-4 p-4 bg-gray-50 rounded-2xl border border-gray-100 border-l-4 border-l-cyan-600">
+                             <p className="text-[10px] font-black text-cyan-600 uppercase mb-1">Provider's Reply:</p>
+                             <p className="text-sm text-gray-700">{r.provider_response}</p>
+                          </div>
+                       )}
+                    </article>
+                 ))}
+              </div>
+           )}
         </div>
 
         <Link href="/" className="inline-block text-xs font-bold text-gray-400 hover:text-cyan-600 transition">
