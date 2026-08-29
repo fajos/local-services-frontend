@@ -58,6 +58,7 @@ export default function ServiceDetailsPage({
   const [city, setCity] = useState("");
   const [note, setNote] = useState("");
   const [scheduledAt, setScheduledAt] = useState("");
+  const [frequency, setFrequency] = useState("once");
 
   /* -------------------- utils -------------------- */
   const router = useRouter();
@@ -98,6 +99,8 @@ export default function ServiceDetailsPage({
           city_or_lga: city.trim(),
           note: note.trim() || null,
           scheduled_at: scheduledAt ? new Date(scheduledAt).toISOString() : null,
+          is_recurring: frequency !== "once",
+          frequency: frequency
         }
       );
       router.push("/dashboard/customer");
@@ -201,6 +204,23 @@ export default function ServiceDetailsPage({
                onChange={(e) => setScheduledAt(e.target.value)}
                className="input"
              />
+          </div>
+
+          <div>
+             <label className="block text-xs font-bold text-blue-600 mb-1">Repeat this service?</label>
+             <div className="flex gap-2">
+                {["once", "weekly", "monthly"].map(opt => (
+                   <button
+                      key={opt}
+                      onClick={() => setFrequency(opt)}
+                      className={`flex-1 py-2 text-[10px] font-black uppercase rounded-lg border transition ${
+                         frequency === opt ? 'bg-blue-600 border-blue-600 text-white shadow-lg' : 'bg-white border-blue-100 text-blue-400'
+                      }`}
+                   >
+                      {opt}
+                   </button>
+                ))}
+             </div>
           </div>
 
           <textarea

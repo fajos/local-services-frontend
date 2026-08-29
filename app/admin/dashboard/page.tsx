@@ -13,8 +13,15 @@ interface Summary {
   total_disputes: number;
 }
 
+interface CategoryAnalytic {
+  category: string;
+  booking_count: number;
+  total_revenue: number;
+}
+
 export default function AdminDashboardHome() {
   const [summary, setSummary] = useState<Summary | null>(null);
+  const [analytics, setAnalytics] = useState<CategoryAnalytic[]>([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
@@ -28,13 +35,16 @@ export default function AdminDashboardHome() {
       return;
     }
 
-    API.get("/admin/summary")
-      .then((res) => setSummary(res.data))
-      .catch((err) => {
-        console.error("Error fetching summary:", err);
-        alert("Access denied or failed to fetch summary.");
-      })
-      .finally(() => setLoading(false));
+    Promise.all([
+      API.get("/admin/summary"),
+      API.get("/admin/analytics/categories")
+    ]).then(([sumRes, anaRes]) => {
+      setSummary(sumRes.data);
+      setAnalytics(anaRes.data);
+    }).catch((err) => {
+      console.error("Error fetching admin data:", err);
+      alert("Access denied or failed to fetch summary.");
+    }).finally(() => setLoading(false));
   }, [token]);
 
   if (loading) {
@@ -79,6 +89,29 @@ export default function AdminDashboardHome() {
           color="from-red-500 to-red-700"
           href="/admin/disputes"
         />
+      </div>
+
+      <h2 className="text-2xl font-bold text-blue-700 mt-12 mb-6">📈 Category Analytics</h2>
+      <div className="bg-white rounded-3xl p-8 border border-blue-100 shadow-sm overflow-hidden">
+         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {analytics.map(item => (
+               <div key={item.category} className="p-5 rounded-2xl bg-blue-50/50 border border-blue-100">
+                  <div className="flex justify-between items-center mb-2">
+                     <p className="font-bold text-gray-900">{item.category}</p>
+                     <span className="px-2 py-1 bg-blue-100 text-blue-700 text-[10px] font-black rounded-lg uppercase">
+                        {item.booking_count} Bookings
+                     </span>
+                  </div>
+                  <p className="text-2xl font-black text-emerald-600">₦{item.total_revenue.toLocaleString()}</p>
+                  <div className="w-full bg-blue-100 h-1.5 rounded-full mt-4 overflow-hidden">
+                     <div
+                        className="bg-blue-600 h-full transition-all"
+                        style={{ width: `${Math.min(100, (item.booking_count / (summary.total_users || 1)) * 100)}%` }}
+                     />
+                  </div>
+               </div>
+            ))}
+         </div>
       </div>
     </div>
   );
