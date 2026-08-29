@@ -54,6 +54,7 @@ export default function ProfilePage() {
 
   // Password Change State
   const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [pwLoading, setPwLoading] = useState(false);
 
@@ -249,18 +250,27 @@ export default function ProfilePage() {
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!currentPassword) {
+      toast.error("Current password is required");
+      return;
+    }
     if (newPassword.length < 8) {
-      toast.error("Password must be at least 8 characters");
+      toast.error("New password must be at least 8 characters");
       return;
     }
     setPwLoading(true);
     try {
-      await API.put("/users/me", { password: newPassword }, { headers: { Authorization: `Bearer ${token}` } });
+      await API.post("/users/me/change-password", {
+        current_password: currentPassword,
+        new_password: newPassword
+      });
       toast.success("Password updated successfully!");
       setShowPasswordModal(false);
       setNewPassword("");
-    } catch (err) {
-      toast.error("Failed to update password");
+      setCurrentPassword("");
+    } catch (err: any) {
+      const msg = err.response?.data?.detail || "Failed to update password";
+      toast.error(msg);
     } finally {
       setPwLoading(false);
     }
@@ -788,6 +798,17 @@ export default function ProfilePage() {
                 </button>
              </div>
              <form onSubmit={handleUpdatePassword} className="space-y-6">
+                <div>
+                   <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Current Password</label>
+                   <input
+                      type="password"
+                      required
+                      value={currentPassword}
+                      onChange={e => setCurrentPassword(e.target.value)}
+                      placeholder="Enter current password"
+                      className="w-full px-4 py-3 rounded-xl border bg-gray-50 text-gray-900 focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 outline-none transition"
+                   />
+                </div>
                 <div>
                    <label className="block text-xs font-bold text-gray-400 uppercase mb-2">New Password</label>
                    <input
