@@ -32,6 +32,7 @@ export default function ProviderSetupPage() {
     business_address: "",
     business_phone: "",
     business_email: "",
+    business_description: "",
     open_hours: "",
     image_url: ""
   });
@@ -166,7 +167,7 @@ export default function ProviderSetupPage() {
                   <PhoneIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-indigo-600 transition-colors" />
                   <input
                     name="business_phone"
-                    placeholder="Work Phone"
+                    placeholder="Business Phone"
                     onChange={handleChange}
                     required
                     className="w-full pl-12 pr-4 py-4 rounded-2xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-400 text-gray-800 transition-all font-medium"
@@ -177,11 +178,23 @@ export default function ProviderSetupPage() {
                   <input
                     name="business_email"
                     type="email"
-                    placeholder="Work Email"
+                    placeholder="Business Email"
                     onChange={handleChange}
                     className="w-full pl-12 pr-4 py-4 rounded-2xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-400 text-gray-800 transition-all font-medium"
                   />
                 </div>
+              </div>
+
+              <div className="relative group">
+                <BriefcaseIcon className="absolute left-4 top-4 w-5 h-5 text-gray-400 group-focus-within:text-indigo-600 transition-colors" />
+                <textarea
+                  name="business_description"
+                  placeholder="Business Description (Tell us what you do...)"
+                  rows={3}
+                  onChange={(e) => setForm({ ...form, business_description: e.target.value })}
+                  required
+                  className="w-full pl-12 pr-4 py-4 rounded-2xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-400 text-gray-800 transition-all font-medium resize-none"
+                />
               </div>
 
               <div className="relative group">
